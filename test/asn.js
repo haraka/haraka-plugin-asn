@@ -60,12 +60,12 @@ describe('parse_routeviews', function () {
   });
 
   it('40431 array', function (done) {
-      assert.deepEqual(
-        asn.parse_routeviews(['40431','208.75.176.0','21']),
-        {asn: '40431', net: '208.75.176.0/21' }
-      );
-      done();
-    });
+    assert.deepEqual(
+      asn.parse_routeviews(['40431','208.75.176.0','21']),
+      {asn: '40431', net: '208.75.176.0/21' }
+    );
+    done();
+  });
 });
 
 describe('parse_cymru', function () {

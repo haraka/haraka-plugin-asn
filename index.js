@@ -126,8 +126,8 @@ exports.lookup_asn = function (next, connection) {
 
     plugin.get_dns_results(zone, ip, function result_cb (err, zone2, r) {
       if (err) {
-          connection.logerror(plugin, err.message);
-          return done();
+        connection.logerror(plugin, err.message);
+        return done();
       }
       if (!r) return done();
 
