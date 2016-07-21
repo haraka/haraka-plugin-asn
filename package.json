@@ -28,6 +28,7 @@
   "devDependencies": {
     "grunt": "^1.0.1",
     "grunt-eslint": "^19.0.0",
-    "haraka-test-fixtures": "^1.0.6"
+    "haraka-test-fixtures": "^1.0.6",
+    "mocha": "^2.5.3"
   }
 }
