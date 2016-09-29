@@ -16,5 +16,4 @@ after_success:
     - cat ./coverage/coverage.json | ./node_modules/.bin/codecov
 
 
-
 sudo: false
