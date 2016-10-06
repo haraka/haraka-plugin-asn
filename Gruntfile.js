@@ -12,7 +12,7 @@ module.exports = function (grunt) {
       test: {
         src: ['test/**/*.js'],
       }
-    },
+    }
   });
 
   grunt.registerTask('lint',    ['eslint']);

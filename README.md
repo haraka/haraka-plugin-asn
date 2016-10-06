@@ -4,18 +4,21 @@
 [![NPM][npm-img]][npm-url]
 
 # haraka-plugin-asn
-look up ASN from local database and/or remote lookup services
+
+look up ASN from local GeoIP databases and/or DNS based providers.
+
 
 ### DNS providers
 
 * origin.asn.cymru.com
 * asn.routeviews.org
 
+
 ### Databases
 
 * MaxMind ASN database
 
-
+PS: Run something like [maxmind-geolite-mirror](https://www.npmjs.com/package/maxmind-geolite-mirror) weekly to keep your database files up-to-date.
 
 
 [ci-img]: https://travis-ci.org/haraka/haraka-plugin-asn.svg?branch=master
