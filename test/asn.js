@@ -127,3 +127,32 @@ describe('get_dns_results', function () {
     });
   });
 });
+
+describe('maxmind geoip db v1', function() {
+  it('test_and_register_geoip', function (done) {
+    var asn = new fixtures.plugin('index');
+    asn.cfg = { main: { } };
+    asn.test_and_register_geoip();
+    assert.ok(asn.maxmind);
+    done();
+  });
+
+
+  it('lookup_via_maxmind', function(done) {
+    var asn = new fixtures.plugin('index');
+    asn.cfg = { main: { } };
+    asn.connection = fixtures.connection.createConnection();
+    asn.connection.remote.ip='8.8.8.8';
+    asn.test_and_register_geoip();
+
+    asn.lookup_via_maxmind(function () {
+      if (asn.mmDbsAvail.length > 0) {
+        var res = asn.connection.results.get('asn');
+        assert.equal(res.asn, 15169);
+        assert.equal(res.org, 'Google Inc.');
+      }
+      done();
+    },
+    asn.connection);
+  });
+});
