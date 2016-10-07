@@ -188,7 +188,7 @@ exports.parse_routeviews = function (thing) {
   if (typeof thing === 'string' && /,/.test(thing)) {
     labels = thing.split(',');
     return { asn: labels[0], net: labels[1] + '/' + labels[2] };
-  };
+  }
 
   // this is a correct result (node >= 0.10.26)
   // 99.177.75.208.asn.routeviews.org. IN TXT "40431" "208.75.176.0" "21"
@@ -257,7 +257,7 @@ exports.add_header_asn = function (next, connection) {
     connection.transaction.add_header('X-Haraka-ASN', asn.asn);
   }
   if (asn.asn_org) {
-    connection.transaction.add_header('X-Haraka-ASN-Org', r.asn_org);
+    connection.transaction.add_header('X-Haraka-ASN-Org', asn.asn_org);
   }
 
   next();
