@@ -29,6 +29,7 @@
     "maxmind": "^0.6"
   },
   "devDependencies": {
+    "eslint": "^3.7.1",
     "haraka-test-fixtures": "^1.0.6",
     "mocha": "*"
   }
