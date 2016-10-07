@@ -1,10 +1,11 @@
 {
   "name": "haraka-plugin-asn",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "look up ASN of remote MTA",
   "main": "index.js",
   "scripts": {
     "test": "mocha",
+    "lint": "./node_modules/.bin/eslint *.js lib/*.js test/*.js",
     "coverage": "./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha"
   },
   "repository": {
@@ -28,8 +29,6 @@
     "maxmind": "^0.6"
   },
   "devDependencies": {
-    "grunt": "*",
-    "grunt-eslint": "*",
     "haraka-test-fixtures": "^1.0.6",
     "mocha": "*"
   }
