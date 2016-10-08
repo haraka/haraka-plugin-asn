@@ -53,7 +53,7 @@ exports.test_and_register_dns_providers = function () {
 
 exports.load_asn_ini = function () {
   var plugin = this;
-  plugin.cfg = plugin.config.get('connect.asn.ini',
+  plugin.cfg = plugin.config.get('asn.ini',
     {
       booleans: [
         '+header.asn',
@@ -245,7 +245,7 @@ exports.parse_monkey = function (str) {
 
 exports.add_header_asn = function (next, connection) {
 
-  var asn = connection.results.get('connect.asn');
+  var asn = connection.results.get('asn');
   if (!asn || !asn.asn) return next();
 
   if (!connection.transaction) return next();
@@ -265,7 +265,7 @@ exports.add_header_asn = function (next, connection) {
 
 exports.add_header_provider = function (next, connection) {
 
-  var asn = connection.results.get('connect.asn');
+  var asn = connection.results.get('asn');
   if (!asn || !asn.asn) return next();
 
   for (var p in asn) {
@@ -297,7 +297,7 @@ exports.test_and_register_geoip = function () {
     return;
   }
 
-  var dbs = []; // ['GeoIPASNum', 'GeoIPASNumv6'];
+  var dbs = ['GeoIPASNum', 'GeoIPASNumv6'];
   plugin.mmDbsAvail = [];
 
   var dbdir = plugin.cfg.main.dbdir || '/usr/local/share/GeoIP/';
