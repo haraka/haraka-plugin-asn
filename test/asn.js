@@ -8,7 +8,7 @@ var fixtures     = require('haraka-test-fixtures');
 
 describe('parse_monkey', function () {
 
-  var asn = new fixtures.plugin('index');
+  var asn = new fixtures.plugin('asn');
 
   it('parses AS 15169/23', function (done) {
     assert.deepEqual(
@@ -33,7 +33,7 @@ describe('parse_monkey', function () {
 
 describe('parse_routeviews', function () {
 
-  var asn = new fixtures.plugin('index');
+  var asn = new fixtures.plugin('asn');
 
   it('40431 string, asn-only', function (done) {
     assert.deepEqual(
@@ -70,7 +70,7 @@ describe('parse_routeviews', function () {
 
 describe('parse_cymru', function () {
 
-  var asn = new fixtures.plugin('index');
+  var asn = new fixtures.plugin('asn');
 
   it('40431', function (done) {
     assert.deepEqual(
@@ -94,7 +94,7 @@ describe('parse_cymru', function () {
 
 describe('get_dns_results', function () {
 
-  var asn = new fixtures.plugin('index');
+  var asn = new fixtures.plugin('asn');
   asn.cfg = { main: { } };
   asn.connection = fixtures.connection.createConnection();
 
@@ -126,11 +126,26 @@ describe('get_dns_results', function () {
       done();
     });
   });
+
+  it('asn.rspamd.com', function (done) {
+    asn.get_dns_results('asn.rspamd.com', '8.8.8.8', function (err, zone, obj) {
+      if (obj) {
+        assert.equal('asn.rspamd.com', zone);
+        assert.equal('15169', obj.asn);
+        assert.equal('8.8.8.0/24', obj.net);
+      }
+      else {
+        assert.equal('something', obj);
+      }
+      done();
+    });
+  });
+
 });
 
 describe('maxmind geoip db v1', function() {
   it('test_and_register_geoip', function (done) {
-    var asn = new fixtures.plugin('index');
+    var asn = new fixtures.plugin('asn');
     asn.cfg = { main: { } };
     asn.test_and_register_geoip();
     assert.ok(asn.maxmind);
@@ -139,7 +154,7 @@ describe('maxmind geoip db v1', function() {
 
 
   it('lookup_via_maxmind', function(done) {
-    var asn = new fixtures.plugin('index');
+    var asn = new fixtures.plugin('asn');
     asn.cfg = { main: { } };
     asn.connection = fixtures.connection.createConnection();
     asn.connection.remote.ip='8.8.8.8';
