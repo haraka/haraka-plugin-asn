@@ -1,6 +1,6 @@
 {
   "name": "haraka-plugin-asn",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "look up ASN of remote MTA",
   "main": "index.js",
   "scripts": {
