@@ -9,7 +9,7 @@ var async     = require('async');
 
 var test_ip   = '66.128.51.163';
 var providers = [];
-var conf_providers = [ 'origin.asn.cymru.com', 'asn.routeviews.org' ];
+var conf_providers = [ 'origin.asn.cymru.com', 'asn.routeviews.org', 'asn.rspamd.com' ];
 
 exports.register = function () {
   var plugin = this;
@@ -127,6 +127,9 @@ exports.get_dns_results = function (zone, ip, done) {
     else if (zone === 'asn.routeviews.org') {
       result = plugin.parse_routeviews(first);
     }
+    else if (zone === 'asn.rspamd.com') {
+      result = plugin.parse_rspamd(first.join(''));
+    }
     // else if (zone === 'origin.asn.spameatingmonkey.net') {
     //   result = plugin.parse_monkey(first);
     // }
@@ -161,14 +164,19 @@ exports.lookup_via_dns = function (next, connection) {
       if (r.net) connection.results.add(plugin, {net: r.net});
 
       // store provider specific results
-      if (zone === 'origin.asn.cymru.com') {
-        connection.results.add(plugin, { emit: true, cymru: r});
-      }
-      else if (zone === 'asn.routeviews.org') {
-        connection.results.add(plugin, { emit: true, routeviews: r });
-      }
-      else if (zone === 'origin.asn.spameatingmonkey.net') {
-        connection.results.add(plugin, { emit: true, monkey: r });
+      switch (zone) {
+      case 'origin.asn.cymru.com':
+          connection.results.add(plugin, { emit: true, cymru: r});
+          break;
+      case 'asn.routeviews.org':
+          connection.results.add(plugin, { emit: true, routeviews: r });
+          break;
+      case 'origin.asn.spameatingmonkey.net':
+          connection.results.add(plugin, { emit: true, monkey: r });
+          break;
+      case 'asn.rspamd.com':
+          connection.results.add(plugin, { emit: true, rspamd: r });
+          break;
       }
 
       return done();
@@ -241,6 +249,20 @@ exports.parse_monkey = function (str) {
     date: r[3],
     country: r[4]
   };
+};
+
+exports.parse_rspamd = function (str) {
+  var plugin = this;
+  var r = str.split(/\s*\|\s*/);
+  //  8.8.8.8.asn.rspamd.com. 14350 IN TXT
+  //        "15169|8.8.8.0/24|US|arin|"
+
+  if (r.length < 4) {
+    plugin.logerror(plugin, "rspamd: bad result length " + r.length +
+        ' string="' + str + '"');
+    return;
+  }
+  return { asn: r[0], net: r[1], country: r[2], assignor: r[3], date: r[4] };
 };
 
 exports.add_header_asn = function (next, connection) {

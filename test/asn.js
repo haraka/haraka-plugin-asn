@@ -126,6 +126,21 @@ describe('get_dns_results', function () {
       done();
     });
   });
+
+  it('asn.rspamd.com', function (done) {
+    asn.get_dns_results('asn.rspamd.com', '8.8.8.8', function (err, zone, obj) {
+      if (obj) {
+        assert.equal('asn.rspamd.com', zone);
+        assert.equal('15169', obj.asn);
+        assert.equal('8.8.8.0/24', obj.net);
+      }
+      else {
+        assert.equal('something', obj);
+      }
+      done();
+    });
+  });
+
 });
 
 describe('maxmind geoip db v1', function() {

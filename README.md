@@ -12,6 +12,7 @@ look up ASN from local GeoIP databases and/or DNS based providers.
 
 * origin.asn.cymru.com
 * asn.routeviews.org
+* asn.rspamd.com
 
 
 ### Databases
