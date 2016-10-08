@@ -165,16 +165,16 @@ exports.lookup_via_dns = function (next, connection) {
 
       // store provider specific results
       switch (zone) {
-      case 'origin.asn.cymru.com':
+        case 'origin.asn.cymru.com':
           connection.results.add(plugin, { emit: true, cymru: r});
           break;
-      case 'asn.routeviews.org':
+        case 'asn.routeviews.org':
           connection.results.add(plugin, { emit: true, routeviews: r });
           break;
-      case 'origin.asn.spameatingmonkey.net':
+        case 'origin.asn.spameatingmonkey.net':
           connection.results.add(plugin, { emit: true, monkey: r });
           break;
-      case 'asn.rspamd.com':
+        case 'asn.rspamd.com':
           connection.results.add(plugin, { emit: true, rspamd: r });
           break;
       }
