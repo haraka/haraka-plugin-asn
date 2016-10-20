@@ -95,7 +95,7 @@ describe('parse_cymru', function () {
 describe('get_dns_results', function () {
 
   var asn = new fixtures.plugin('asn');
-  asn.cfg = { main: { } };
+  asn.cfg = { main: { }, protocols: { dns: true } };
   asn.connection = fixtures.connection.createConnection();
 
   it('origin.asn.cymru.com', function (done) {
@@ -146,7 +146,7 @@ describe('get_dns_results', function () {
 describe('maxmind geoip db v1', function() {
   it('test_and_register_geoip', function (done) {
     var asn = new fixtures.plugin('asn');
-    asn.cfg = { main: { } };
+    asn.cfg = { main: { }, protocols: { geoip: true } };
     asn.test_and_register_geoip();
     assert.ok(asn.maxmind);
     done();
@@ -155,13 +155,13 @@ describe('maxmind geoip db v1', function() {
 
   it('lookup_via_maxmind', function(done) {
     var asn = new fixtures.plugin('asn');
-    asn.cfg = { main: { } };
+    asn.cfg = { main: { }, protocols: { } };
     asn.connection = fixtures.connection.createConnection();
     asn.connection.remote.ip='8.8.8.8';
     asn.test_and_register_geoip();
 
     asn.lookup_via_maxmind(function () {
-      if (asn.mmDbsAvail.length > 0) {
+      if (asn.mmDbsAvail && asn.mmDbsAvail.length > 0) {
         var res = asn.connection.results.get('asn');
         assert.equal(res.asn, 15169);
         assert.equal(res.org, 'Google Inc.');

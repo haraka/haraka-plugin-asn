@@ -29,6 +29,7 @@ exports.register = function () {
 
 exports.test_and_register_dns_providers = function () {
   var plugin = this;
+  if (!plugin.cfg.protocols.dns) return; // disabled in config
 
   for (var i=0; i < conf_providers.length; i++) {
     plugin.get_dns_results(conf_providers[i], test_ip, function (err, zone, res) {
@@ -58,6 +59,8 @@ exports.load_asn_ini = function () {
       booleans: [
         '+header.asn',
         '-header.provider',
+        '+protocols.dns',
+        '+protocols.geoip',
       ]
     },
     function () {
@@ -144,7 +147,7 @@ exports.get_dns_results = function (zone, ip, done) {
 exports.lookup_via_dns = function (next, connection) {
   var plugin = this;
 
-  if (connection.remote.is_private_ip) return next();
+  if (connection.remote.is_private) return next();
 
   var ip = connection.remote.ip;
 
@@ -308,6 +311,7 @@ exports.add_header_provider = function (next, connection) {
 
 exports.test_and_register_geoip = function () {
   var plugin = this;
+  if (!plugin.cfg.protocols.geoip) return; // disabled in config
 
   try {
     plugin.maxmind = require('maxmind');
