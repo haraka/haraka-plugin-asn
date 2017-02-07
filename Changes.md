@@ -1,4 +1,9 @@
 
+## 1.0.8 - 2017-0
+
+- added parse_rspamd test
+- emit rspamd DNS provider results (when enabled)
+
 ## 1.0.7 - 2017-02-06
 
 - updated eslint to use eslint-plugin-haraka

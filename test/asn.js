@@ -98,6 +98,22 @@ describe('parse_cymru', function () {
   });
 });
 
+describe('parse_rspamd', function () {
+
+  var asn = new fixtures.plugin('asn');
+
+  it('40431', function (done) {
+    assert.deepEqual(
+      asn.parse_rspamd('15169|8.8.8.0/24|US|arin|'),
+      {
+        asn: '15169', net: '8.8.8.0/24', country: 'US',
+        assignor: 'arin', date: ''
+      }
+    );
+    done();
+  });
+});
+
 describe('get_dns_results', function () {
 
   var asn = new fixtures.plugin('asn');
@@ -134,6 +150,7 @@ describe('get_dns_results', function () {
   });
 
   it('asn.rspamd.com', function (done) {
+    this.timeout(3000);
     asn.get_dns_results('asn.rspamd.com', '8.8.8.8', function (err, zone, obj) {
       if (obj) {
         assert.equal('asn.rspamd.com', zone);

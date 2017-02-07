@@ -173,8 +173,11 @@ exports.lookup_via_dns = function (next, connection) {
         case 'asn.routeviews.org':
           results.routeviews = r;
           break;
-        case 'origin.asn.spameatingmonkey.net':
-          results.monkey = r;
+        // case 'origin.asn.spameatingmonkey.net':
+        //   results.monkey = r;
+        //   break;
+        case 'asn.rspamd.com':
+          results.rspamd = r;
           break;
       }
 
