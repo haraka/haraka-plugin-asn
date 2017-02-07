@@ -146,41 +146,39 @@ exports.get_dns_results = function (zone, ip, done) {
 
 exports.lookup_via_dns = function (next, connection) {
   var plugin = this;
-
   if (connection.remote.is_private) return next();
-
-  var ip = connection.remote.ip;
 
   function provIter (zone, done) {
 
     connection.logdebug(plugin, "zone: " + zone);
 
-    plugin.get_dns_results(zone, ip, function (err, zone2, r) {
+    plugin.get_dns_results(zone, connection.remote.ip, function (err, zone2, r) {
       if (err) {
         connection.logerror(plugin, err.message);
         return done();
       }
       if (!r) return done();
 
+      var results = { emit: true };
+
       // store asn & net from any source
-      if (r.asn) connection.results.add(plugin, {asn: r.asn});
-      if (r.net) connection.results.add(plugin, {net: r.net});
+      if (r.asn) results.asn = r.asn;
+      if (r.net) results.net = r.net;
 
       // store provider specific results
       switch (zone) {
         case 'origin.asn.cymru.com':
-          connection.results.add(plugin, { emit: true, cymru: r});
+          results.cymru = r;
           break;
         case 'asn.routeviews.org':
-          connection.results.add(plugin, { emit: true, routeviews: r });
+          results.routeviews = r;
           break;
         case 'origin.asn.spameatingmonkey.net':
-          connection.results.add(plugin, { emit: true, monkey: r });
-          break;
-        case 'asn.rspamd.com':
-          connection.results.add(plugin, { emit: true, rspamd: r });
+          results.monkey = r;
           break;
       }
+
+      connection.results.add(plugin, results);
 
       return done();
     });
