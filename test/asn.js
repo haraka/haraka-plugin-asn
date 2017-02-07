@@ -150,6 +150,7 @@ describe('get_dns_results', function () {
   });
 
   it('asn.rspamd.com', function (done) {
+    this.timeout(3000);
     asn.get_dns_results('asn.rspamd.com', '8.8.8.8', function (err, zone, obj) {
       if (obj) {
         assert.equal('asn.rspamd.com', zone);
