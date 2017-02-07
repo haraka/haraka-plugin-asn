@@ -23,9 +23,10 @@ describe('parse_monkey', function () {
   it('parses AS 15169/16', function (done) {
     assert.deepEqual(
       asn.parse_monkey('74.125.0.0/16 | AS15169 | Google Inc. | 2000-03-30 | US'),
-        { net: '74.125.0.0/16', asn: '15169', org: 'Google Inc.',
-          date: '2000-03-30', country: 'US'
-        }
+      {
+        net: '74.125.0.0/16', asn: '15169', org: 'Google Inc.',
+        date: '2000-03-30', country: 'US'
+      }
     );
     done();
   });
@@ -46,7 +47,9 @@ describe('parse_routeviews', function () {
   it('40431 string', function (done) {
     assert.deepEqual(
       asn.parse_routeviews('40431 208.75.176.0 21'),
-      {asn: '40431', net: '208.75.176.0/21'}
+      {
+        asn: '40431', net: '208.75.176.0/21'
+      }
     );
     done();
   });
@@ -75,8 +78,9 @@ describe('parse_cymru', function () {
   it('40431', function (done) {
     assert.deepEqual(
       asn.parse_cymru('40431 | 208.75.176.0/21 | US | arin | 2007-03-02'),
-      {   asn: '40431', net: '208.75.176.0/21', country: 'US',
-          assignor: 'arin', date: '2007-03-02'
+      {
+        asn: '40431', net: '208.75.176.0/21', country: 'US',
+        assignor: 'arin', date: '2007-03-02'
       }
     );
     done();
@@ -85,8 +89,10 @@ describe('parse_cymru', function () {
   it('10290', function (done) {
     assert.deepEqual(
       asn.parse_cymru('10290 | 12.129.48.0/24 | US | arin |'),
-        {   asn: '10290', net: '12.129.48.0/24', country: 'US',
-          assignor: 'arin', date: ''}
+      {
+        asn: '10290', net: '12.129.48.0/24', country: 'US',
+        assignor: 'arin', date: ''
+      }
     );
     done();
   });
@@ -143,7 +149,7 @@ describe('get_dns_results', function () {
 
 });
 
-describe('maxmind geoip db v1', function() {
+describe('maxmind geoip db v1', function () {
   it('test_and_register_geoip', function (done) {
     var asn = new fixtures.plugin('asn');
     asn.cfg = { main: { }, protocols: { geoip: true } };
@@ -153,7 +159,7 @@ describe('maxmind geoip db v1', function() {
   });
 
 
-  it('lookup_via_maxmind', function(done) {
+  it('lookup_via_maxmind', function (done) {
     var asn = new fixtures.plugin('asn');
     asn.cfg = { main: { }, protocols: { } };
     asn.connection = fixtures.connection.createConnection();
