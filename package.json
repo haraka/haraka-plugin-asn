@@ -26,7 +26,7 @@
   "homepage": "https://github.com/haraka/haraka-plugin-asn#readme",
   "dependencies": {
     "async": "^2.0.0",
-    "maxmind": "^0.6"
+    "maxmind": "^2.1.0"
   },
   "devDependencies": {
     "eslint": "*",
