@@ -6,6 +6,8 @@
 
 # haraka-plugin-asn
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/haraka/haraka-plugin-asn.svg)](https://greenkeeper.io/)
+
 look up ASN from local GeoIP databases and/or DNS based providers.
 
 
