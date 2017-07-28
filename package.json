@@ -4,9 +4,9 @@
   "description": "look up ASN of remote MTA",
   "main": "index.js",
   "scripts": {
-    "test": "mocha",
-    "lint": "./node_modules/.bin/eslint *.js test/*.js",
-    "coverage": "./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha"
+    "test": "node node_modules/.bin/mocha",
+    "lint": "node node_modules/.bin/eslint *.js test/*.js",
+    "coverage": "node node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha"
   },
   "repository": {
     "type": "git",
@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "eslint": "*",
-    "eslint-plugin-haraka": "^1.0.5",
+    "eslint-plugin-haraka": ">=1.0.5",
     "haraka-test-fixtures": ">=1.0.6",
     "mocha": "*"
   }
