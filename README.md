@@ -2,6 +2,7 @@
 [![Code Coverage][cov-img]][cov-url]
 [![Code Climate][clim-img]][clim-url]
 [![Windows Build status][appv-img]][appv-url]
+[![Greenkeeper badge][gk-img]][gk-url]
 [![NPM][npm-img]][npm-url]
 
 # haraka-plugin-asn
@@ -33,3 +34,5 @@ PS: Run something like [maxmind-geolite-mirror](https://www.npmjs.com/package/ma
 [appv-url]: https://ci.appveyor.com/project/msimerson/haraka-plugin-asn
 [npm-img]: https://nodei.co/npm/haraka-plugin-asn.png
 [npm-url]: https://www.npmjs.com/package/haraka-plugin-asn
+[gk-img]: https://badges.greenkeeper.io/haraka/haraka-plugin-asn.svg
+[gk-url]: https://greenkeeper.io/

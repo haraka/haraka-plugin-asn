@@ -23,8 +23,7 @@ describe('parse_monkey', function () {
   it('parses AS 15169/16', function (done) {
     assert.deepEqual(
       asn.parse_monkey('74.125.0.0/16 | AS15169 | Google Inc. | 2000-03-30 | US'),
-      {
-        net: '74.125.0.0/16', asn: '15169', org: 'Google Inc.',
+      { net: '74.125.0.0/16', asn: '15169', org: 'Google Inc.',
         date: '2000-03-30', country: 'US'
       }
     );
@@ -78,8 +77,7 @@ describe('parse_cymru', function () {
   it('40431', function (done) {
     assert.deepEqual(
       asn.parse_cymru('40431 | 208.75.176.0/21 | US | arin | 2007-03-02'),
-      {
-        asn: '40431', net: '208.75.176.0/21', country: 'US',
+      { asn: '40431', net: '208.75.176.0/21', country: 'US',
         assignor: 'arin', date: '2007-03-02'
       }
     );
@@ -89,8 +87,7 @@ describe('parse_cymru', function () {
   it('10290', function (done) {
     assert.deepEqual(
       asn.parse_cymru('10290 | 12.129.48.0/24 | US | arin |'),
-      {
-        asn: '10290', net: '12.129.48.0/24', country: 'US',
+      { asn: '10290', net: '12.129.48.0/24', country: 'US',
         assignor: 'arin', date: ''
       }
     );
