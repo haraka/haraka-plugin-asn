@@ -1,14 +1,14 @@
 'use strict';
 
 // node build-in modules
-var assert       = require('assert');
+const assert     = require('assert');
 
 // npm installed modules
-var fixtures     = require('haraka-test-fixtures');
+const fixtures   = require('haraka-test-fixtures');
 
 describe('parse_monkey', function () {
 
-  var asn = new fixtures.plugin('asn');
+  const asn = new fixtures.plugin('asn');
 
   it('parses AS 15169/23', function (done) {
     assert.deepEqual(
@@ -33,7 +33,7 @@ describe('parse_monkey', function () {
 
 describe('parse_routeviews', function () {
 
-  var asn = new fixtures.plugin('asn');
+  const asn = new fixtures.plugin('asn');
 
   it('40431 string, asn-only', function (done) {
     assert.deepEqual(
@@ -72,7 +72,7 @@ describe('parse_routeviews', function () {
 
 describe('parse_cymru', function () {
 
-  var asn = new fixtures.plugin('asn');
+  const asn = new fixtures.plugin('asn');
 
   it('40431', function (done) {
     assert.deepEqual(
@@ -97,7 +97,7 @@ describe('parse_cymru', function () {
 
 describe('parse_rspamd', function () {
 
-  var asn = new fixtures.plugin('asn');
+  const asn = new fixtures.plugin('asn');
 
   it('40431', function (done) {
     assert.deepEqual(
@@ -113,7 +113,7 @@ describe('parse_rspamd', function () {
 
 describe('get_dns_results', function () {
 
-  var asn = new fixtures.plugin('asn');
+  const asn = new fixtures.plugin('asn');
   asn.cfg = { main: { }, protocols: { dns: true } };
   asn.connection = fixtures.connection.createConnection();
 
@@ -158,33 +158,92 @@ describe('get_dns_results', function () {
         assert.equal('something', obj);
       }
       done();
-    });
-  });
+    })
+  })
 
-});
+  it('origin.asn.spameatingmonkey.net', (done) => {
+    this.timeout(3000);
+    asn.get_dns_results('origin.asn.spameatingmonkey.net', '8.8.8.8', (err, zone, obj) => {
+      if (obj) {
+        assert.equal('origin.asn.spameatingmonkey.net', zone);
+        assert.equal('15169', obj.asn);
+        assert.equal('8.8.8.0/24', obj.net);
+      }
+      else {
+        assert.equal('something', obj);
+      }
+      done();
+    })
+  })
+})
 
-describe('maxmind geoip db v1', function () {
-  it('test_and_register_geoip', function (done) {
-    var asn = new fixtures.plugin('asn');
+describe('maxmind geoip db v1', () => {
+  it('test_and_register_geoip', (done) => {
+    const asn = new fixtures.plugin('asn');
     asn.cfg = { main: { }, protocols: { geoip: true } };
     asn.test_and_register_geoip();
     assert.ok(asn.maxmind);
     done();
-  });
+  })
 
 
-  it('lookup_via_maxmind', function (done) {
-    var asn = new fixtures.plugin('asn');
-    asn.cfg = { main: { }, protocols: { } };
+  it('lookup_via_maxmind, IPv4', (done) => {
+    const asn = new fixtures.plugin('asn');
+    asn.cfg = { main: { }, protocols: { geoip: true } };
     asn.connection = fixtures.connection.createConnection();
     asn.connection.remote.ip='8.8.8.8';
     asn.test_and_register_geoip();
 
-    asn.lookup_via_maxmind(function () {
+    asn.lookup_via_maxmind(() => {
       if (asn.mmDbsAvail && asn.mmDbsAvail.length > 0) {
-        var res = asn.connection.results.get('asn');
+        const res = asn.connection.results.get('asn');
         assert.equal(res.asn, 15169);
         assert.equal(res.org, 'Google Inc.');
+      }
+      else {
+        console.error('no DBs found');
+      }
+      done();
+    },
+    asn.connection);
+  })
+
+  it('lookup_via_maxmind, IPv6', (done) => {
+    const asn = new fixtures.plugin('asn');
+    asn.cfg = { main: { }, protocols: { geoip: true } };
+    asn.connection = fixtures.connection.createConnection();
+    asn.connection.remote.ip='2001:4860:4860::8888';
+    asn.test_and_register_geoip();
+
+    asn.lookup_via_maxmind(() => {
+      console.log(`dbs: ${asn.mmDbsAvail}`)
+      if (asn.mmDbsAvail && asn.mmDbsAvail.length > 0) {
+        const res = asn.connection.results.get('asn');
+        // console.log(res);
+        assert.equal(res.asn, 15169);
+        assert.equal(res.org, 'Google Inc.');
+      }
+      else {
+        console.error('no DBs found');
+      }
+      done();
+    },
+    asn.connection);
+  });
+
+  it('maxmind AS w/o org', (done) => {
+    const asn = new fixtures.plugin('asn');
+    asn.cfg = { main: { }, protocols: { geoip: true } };
+    asn.connection = fixtures.connection.createConnection();
+    asn.connection.remote.ip='216.255.64.1';
+    asn.test_and_register_geoip();
+
+    asn.lookup_via_maxmind(() => {
+      if (asn.mmDbsAvail && asn.mmDbsAvail.length > 0) {
+        const res = asn.connection.results.get('asn');
+        // console.log(res);
+        assert.equal(res.asn, 63200);
+        assert.equal(res.org, '');
       }
       done();
     },
