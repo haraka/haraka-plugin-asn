@@ -158,10 +158,24 @@ describe('get_dns_results', function () {
         assert.equal('something', obj);
       }
       done();
-    });
-  });
+    })
+  })
 
-});
+  it('origin.asn.spameatingmonkey.net', (done) => {
+    this.timeout(3000);
+    asn.get_dns_results('origin.asn.spameatingmonkey.net', '8.8.8.8', (err, zone, obj) => {
+      if (obj) {
+        assert.equal('origin.asn.spameatingmonkey.net', zone);
+        assert.equal('15169', obj.asn);
+        assert.equal('8.8.8.0/24', obj.net);
+      }
+      else {
+        assert.equal('something', obj);
+      }
+      done();
+    })
+  })
+})
 
 describe('maxmind geoip db v1', () => {
   it('test_and_register_geoip', (done) => {
@@ -227,7 +241,7 @@ describe('maxmind geoip db v1', () => {
     asn.lookup_via_maxmind(() => {
       if (asn.mmDbsAvail && asn.mmDbsAvail.length > 0) {
         const res = asn.connection.results.get('asn');
-        console.log(res);
+        // console.log(res);
         assert.equal(res.asn, 63200);
         assert.equal(res.org, '');
       }

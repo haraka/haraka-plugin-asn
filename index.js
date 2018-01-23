@@ -55,39 +55,33 @@ exports.test_and_register_dns_providers = function () {
 
 exports.load_asn_ini = function () {
   const plugin = this;
-  plugin.cfg = plugin.config.get('asn.ini',
-    {
-      booleans: [
-        '+header.asn',
-        '-header.provider',
-        '+protocols.dns',
-        '+protocols.geoip',
-      ]
-    },
-    function () {
-      plugin.load_asn_ini();
-    }
-  );
+  plugin.cfg = plugin.config.get('asn.ini', {
+    booleans: [
+      '+header.asn',
+      '-header.provider',
+      '+protocols.dns',
+      '+protocols.geoip',
+    ]
+  },
+  function () {
+    plugin.load_asn_ini();
+  });
 
-  if (plugin.cfg.main.providers !== undefined) {  // defined
-    if (plugin.cfg.main.providers === '') {   // and not empty
+  const c = plugin.cfg;
+  if (c.main.providers !== undefined) {  // defined
+    if (c.main.providers === '') {   // and not empty
       conf_providers = [];
     }
     else {
-      conf_providers = plugin.cfg.main.providers.split(/[\s,;]+/);
+      conf_providers = c.main.providers.split(/[\s,;]+/);
     }
   }
-  if (plugin.cfg.main.test_ip) {
-    test_ip = plugin.cfg.main.test_ip;
-  }
+
+  if (c.main.test_ip) test_ip = c.main.test_ip;
 
   // backwards compat with old config settings (Sunset 3.0)
-  if (plugin.cfg.main.asn_header !== undefined) {
-    plugin.cfg.header.asn = plugin.cfg.main.asn_header;
-  }
-  if (plugin.cfg.main.provider_header !== undefined) {
-    plugin.cfg.header.provider = plugin.cfg.main.provider_header;
-  }
+  if (c.main.asn_header !== undefined) c.header.asn = c.main.asn_header;
+  if (c.main.provider_header !== undefined) c.header.provider = c.main.provider_header;
 }
 
 exports.get_dns_results = function (zone, ip, done) {
@@ -96,64 +90,62 @@ exports.get_dns_results = function (zone, ip, done) {
   // plugin.logdebug(plugin, "query: " + query);
 
   // only run the callback once
-  let ran_cb = false;
-  function cb () {
-    if (ran_cb) return;
-    ran_cb = true;
+  let calledDone = false;
+  function doneOnce () {
+    if (calledDone) return;
+    calledDone = true;
     return done.apply(plugin, arguments);
   }
 
   const timer = setTimeout(() => {
-    return cb(new Error(zone + ' timeout'), zone, null);
+    return doneOnce(new Error(zone + ' timeout'), zone, null);
   }, (plugin.cfg.main.timeout || 4) * 1000);
 
   dns.resolveTxt(query, function (err, addrs) {
     clearTimeout(timer);
-    if (ran_cb) return;
+    if (calledDone) return;
     if (err) {
       plugin.logerror(plugin, "error: " + err + ' running: ' + query);
-      return cb(err, zone);
+      return doneOnce(err, zone);
     }
 
     if (!addrs || !addrs[0]) {
-      return cb(new Error('no results for ' + query), zone);
+      return doneOnce(new Error('no results for ' + query), zone);
     }
 
     const first = addrs[0];
-    // node 0.11+ returns TXT records as an array of labels
 
     plugin.logdebug(plugin, zone + " answers: " + first);
-    let result;
+    const result = plugin.get_result(zone, first);
 
-    if (zone === 'origin.asn.cymru.com') {
-      result = plugin.parse_cymru(first.join(''));
-    }
-    else if (zone === 'asn.routeviews.org') {
-      result = plugin.parse_routeviews(first);
-    }
-    else if (zone === 'asn.rspamd.com') {
-      result = plugin.parse_rspamd(first.join(''));
-    }
-    // else if (zone === 'origin.asn.spameatingmonkey.net') {
-    //   result = plugin.parse_monkey(first);
-    // }
-    else {
-      plugin.logerror(plugin, "unrecognized ASN provider: " + zone);
-    }
-
-    return cb(null, zone, result);
+    return doneOnce(null, zone, result);
   })
+}
+
+exports.get_result = function (zone, first) {
+  const plugin = this;
+
+  if (zone === 'origin.asn.cymru.com') return plugin.parse_cymru(first.join(''));
+
+  if (zone === 'asn.routeviews.org') return plugin.parse_routeviews(first);
+
+  if (zone === 'asn.rspamd.com') return plugin.parse_rspamd(first.join(''));
+
+  if (zone === 'origin.asn.spameatingmonkey.net') return plugin.parse_monkey(first.join(''));
+
+  plugin.logerror(plugin, `unrecognized ASN provider: ${zone}`);
+  return;
 }
 
 exports.lookup_via_dns = function (next, connection) {
   const plugin = this;
   if (connection.remote.is_private) return next();
 
-  function provIter (zone, done) {
+  async.each(providers, (zone, done) => {
 
     connection.logdebug(plugin, "zone: " + zone);
 
-    plugin.get_dns_results(zone, connection.remote.ip, function (err, zone2, r) {
+    plugin.get_dns_results(zone, connection.remote.ip, (err, zone2, r) => {
       if (err) {
         connection.logerror(plugin, err.message);
         return done();
@@ -174,9 +166,9 @@ exports.lookup_via_dns = function (next, connection) {
         case 'asn.routeviews.org':
           results.routeviews = r;
           break;
-        // case 'origin.asn.spameatingmonkey.net':
-        //   results.monkey = r;
-        //   break;
+        case 'origin.asn.spameatingmonkey.net':
+          results.monkey = r;
+          break;
         case 'asn.rspamd.com':
           results.rspamd = r;
           break;
@@ -186,12 +178,11 @@ exports.lookup_via_dns = function (next, connection) {
 
       return done();
     })
-  }
-
-  async.each(providers, provIter, function provDone (err) {
+  },
+  (err) => {
     if (err) connection.results.add(plugin, { err: err });
     next();
-  });
+  })
 }
 
 exports.parse_routeviews = function (thing) {
@@ -296,10 +287,8 @@ exports.add_header_provider = function (next, connection) {
   if (!asn || !asn.asn) return next();
 
   for (const p in asn) {
-    if (!asn[p].asn) {   // ignore non-object results
-      // connection.logdebug(plugin, p + ", " + asn[p]);
-      continue;
-    }
+    if (!asn[p].asn) continue;  // ignore non-object results
+
     const name = 'X-Haraka-ASN-' + p.toUpperCase();
     const values = [];
     for (const k in asn[p]) {
@@ -320,8 +309,7 @@ exports.test_and_register_geoip = function () {
   }
   catch (e) {
     plugin.logerror(e);
-    plugin.logerror("unable to load maxmind, try\n\n\t" +
-       "'npm install -g maxmind@0.6'\n\n");
+    plugin.logerror("unable to load maxmind, try\n\n\t'npm install -g maxmind@0.6'\n\n");
     return;
   }
 
@@ -341,9 +329,9 @@ exports.test_and_register_geoip = function () {
     return;
   }
 
-  plugin.loginfo('provider maxmind with ' + plugin.mmDbsAvail.length + ' DBs');
+  plugin.loginfo(`provider maxmind with ${plugin.mmDbsAvail.length} DBs`);
   plugin.maxmind.init(plugin.mmDbsAvail, {indexCache: true, checkForUpdates: true});
-  plugin.register_hook('connect',   'lookup_via_maxmind');
+  plugin.register_hook('connect', 'lookup_via_maxmind');
 }
 
 exports.lookup_via_maxmind = function (next, connection) {
