@@ -1,18 +1,19 @@
 // determine the ASN of the connecting IP
 
 // node built-ins
-var dns       = require('dns');
-var fs        = require('fs');
+const dns     = require('dns');
+const fs      = require('fs');
+const net     = require('net');
 
 // npm modules
-var async     = require('async');
+const async     = require('async');
 
-var test_ip   = '66.128.51.163';
-var providers = [];
-var conf_providers = [ 'origin.asn.cymru.com', 'asn.routeviews.org', 'asn.rspamd.com' ];
+let test_ip   = '66.128.51.163';
+const providers = [];
+let conf_providers = [ 'origin.asn.cymru.com', 'asn.routeviews.org', 'asn.rspamd.com' ];
 
 exports.register = function () {
-  var plugin = this;
+  const plugin = this;
   plugin.registered = false;
 
   plugin.load_asn_ini();
@@ -25,13 +26,13 @@ exports.register = function () {
   if (plugin.cfg.header.provider) {
     plugin.register_hook('data_post', 'add_header_provider');
   }
-};
+}
 
 exports.test_and_register_dns_providers = function () {
-  var plugin = this;
+  const plugin = this;
   if (!plugin.cfg.protocols.dns) return; // disabled in config
 
-  for (var i=0; i < conf_providers.length; i++) {
+  for (let i=0; i < conf_providers.length; i++) {
     plugin.get_dns_results(conf_providers[i], test_ip, function (err, zone, res) {
       if (err) {
         plugin.logerror(plugin, err);
@@ -50,10 +51,10 @@ exports.test_and_register_dns_providers = function () {
       plugin.register_hook('lookup_rdns', 'lookup_via_dns');
     });
   }
-};
+}
 
 exports.load_asn_ini = function () {
-  var plugin = this;
+  const plugin = this;
   plugin.cfg = plugin.config.get('asn.ini',
     {
       booleans: [
@@ -87,22 +88,22 @@ exports.load_asn_ini = function () {
   if (plugin.cfg.main.provider_header !== undefined) {
     plugin.cfg.header.provider = plugin.cfg.main.provider_header;
   }
-};
+}
 
 exports.get_dns_results = function (zone, ip, done) {
-  var plugin = this;
-  var query = ip.split('.').reverse().join('.') + '.' + zone;
+  const plugin = this;
+  const query = ip.split('.').reverse().join('.') + '.' + zone;
   // plugin.logdebug(plugin, "query: " + query);
 
   // only run the callback once
-  var ran_cb = false;
-  var cb = function () {
+  let ran_cb = false;
+  function cb () {
     if (ran_cb) return;
     ran_cb = true;
     return done.apply(plugin, arguments);
   }
 
-  var timer = setTimeout(function () {
+  const timer = setTimeout(() => {
     return cb(new Error(zone + ' timeout'), zone, null);
   }, (plugin.cfg.main.timeout || 4) * 1000);
 
@@ -118,11 +119,11 @@ exports.get_dns_results = function (zone, ip, done) {
       return cb(new Error('no results for ' + query), zone);
     }
 
-    var first = addrs[0];
+    const first = addrs[0];
     // node 0.11+ returns TXT records as an array of labels
 
     plugin.logdebug(plugin, zone + " answers: " + first);
-    var result;
+    let result;
 
     if (zone === 'origin.asn.cymru.com') {
       result = plugin.parse_cymru(first.join(''));
@@ -141,11 +142,11 @@ exports.get_dns_results = function (zone, ip, done) {
     }
 
     return cb(null, zone, result);
-  });
-};
+  })
+}
 
 exports.lookup_via_dns = function (next, connection) {
-  var plugin = this;
+  const plugin = this;
   if (connection.remote.is_private) return next();
 
   function provIter (zone, done) {
@@ -159,7 +160,7 @@ exports.lookup_via_dns = function (next, connection) {
       }
       if (!r) return done();
 
-      var results = { emit: true };
+      const results = { emit: true };
 
       // store asn & net from any source
       if (r.asn) results.asn = r.asn;
@@ -184,18 +185,18 @@ exports.lookup_via_dns = function (next, connection) {
       connection.results.add(plugin, results);
 
       return done();
-    });
+    })
   }
 
   async.each(providers, provIter, function provDone (err) {
     if (err) connection.results.add(plugin, { err: err });
     next();
   });
-};
+}
 
 exports.parse_routeviews = function (thing) {
-  var plugin = this;
-  var labels;
+  const plugin = this;
+  let labels;
 
   if (typeof thing === 'string' && /,/.test(thing)) {
     labels = thing.split(',');
@@ -220,11 +221,11 @@ exports.parse_routeviews = function (thing) {
   }
 
   return { asn: labels[0], net: labels[1] + '/' + labels[2] };
-};
+}
 
 exports.parse_cymru = function (str) {
-  var plugin = this;
-  var r = str.split(/\s+\|\s*/);
+  const plugin = this;
+  const r = str.split(/\s+\|\s*/);
   //  99.177.75.208.origin.asn.cymru.com. 14350 IN TXT
   //        "40431 | 208.75.176.0/21 | US | arin | 2007-03-02"
   //        "10290 | 12.129.48.0/24  | US | arin |"
@@ -234,11 +235,11 @@ exports.parse_cymru = function (str) {
     return;
   }
   return { asn: r[0], net: r[1], country: r[2], assignor: r[3], date: r[4] };
-};
+}
 
 exports.parse_monkey = function (str) {
-  var plugin = this;
-  var r = str.split(/\s+\|\s+/);
+  const plugin = this;
+  const r = str.split(/\s+\|\s+/);
   // "74.125.44.0/23 | AS15169 | Google Inc. | 2000-03-30"
   // "74.125.0.0/16 | AS15169 | Google Inc. | 2000-03-30 | US"
   if (r.length < 3) {
@@ -253,11 +254,11 @@ exports.parse_monkey = function (str) {
     date: r[3],
     country: r[4]
   };
-};
+}
 
 exports.parse_rspamd = function (str) {
-  var plugin = this;
-  var r = str.split(/\s*\|\s*/);
+  const plugin = this;
+  const r = str.split(/\s*\|\s*/);
   //  8.8.8.8.asn.rspamd.com. 14350 IN TXT
   //        "15169|8.8.8.0/24|US|arin|"
 
@@ -267,11 +268,11 @@ exports.parse_rspamd = function (str) {
     return;
   }
   return { asn: r[0], net: r[1], country: r[2], assignor: r[3], date: r[4] };
-};
+}
 
 exports.add_header_asn = function (next, connection) {
 
-  var asn = connection.results.get('asn');
+  const asn = connection.results.get('asn');
   if (!asn || !asn.asn) return next();
 
   if (!connection.transaction) return next();
@@ -291,27 +292,27 @@ exports.add_header_asn = function (next, connection) {
 
 exports.add_header_provider = function (next, connection) {
 
-  var asn = connection.results.get('asn');
+  const asn = connection.results.get('asn');
   if (!asn || !asn.asn) return next();
 
-  for (var p in asn) {
+  for (const p in asn) {
     if (!asn[p].asn) {   // ignore non-object results
       // connection.logdebug(plugin, p + ", " + asn[p]);
       continue;
     }
-    var name = 'X-Haraka-ASN-' + p.toUpperCase();
-    var values = [];
-    for (var k in asn[p]) {
+    const name = 'X-Haraka-ASN-' + p.toUpperCase();
+    const values = [];
+    for (const k in asn[p]) {
       values.push(k + '=' + asn[p][k]);
     }
     connection.transaction.add_header(name, values.join(' '));
   }
 
   return next();
-};
+}
 
 exports.test_and_register_geoip = function () {
-  var plugin = this;
+  const plugin = this;
   if (!plugin.cfg.protocols.geoip) return; // disabled in config
 
   try {
@@ -324,12 +325,12 @@ exports.test_and_register_geoip = function () {
     return;
   }
 
-  var dbs = ['GeoIPASNum', 'GeoIPASNumv6'];
+  const dbs = ['GeoIPASNum', 'GeoIPASNumv6'];
   plugin.mmDbsAvail = [];
 
-  var dbdir = plugin.cfg.main.dbdir || '/usr/local/share/GeoIP/';
-  for (var i=0; i < dbs.length; i++) {
-    var path = dbdir + dbs[i] + '.dat';
+  const dbdir = plugin.cfg.main.dbdir || '/usr/local/share/GeoIP/';
+  for (let i=0; i < dbs.length; i++) {
+    const path = dbdir + dbs[i] + '.dat';
     if (!fs.existsSync(path)) continue;
     plugin.mmDbsAvail.push(path);
   }
@@ -343,23 +344,26 @@ exports.test_and_register_geoip = function () {
   plugin.loginfo('provider maxmind with ' + plugin.mmDbsAvail.length + ' DBs');
   plugin.maxmind.init(plugin.mmDbsAvail, {indexCache: true, checkForUpdates: true});
   plugin.register_hook('connect',   'lookup_via_maxmind');
-};
+}
 
 exports.lookup_via_maxmind = function (next, connection) {
-  var plugin = this;
+  const plugin = this;
 
   if (!plugin.maxmind) return next();
   if (!plugin.maxmind.dbsLoaded) return next();
 
-  var asn = plugin.maxmind.getAsn(connection.remote.ip);
+  let getAsn = 'getAsn';
+  if (net.isIPv6(connection.remote.ip)) getAsn = 'getAsnV6';
+
+  const asn = plugin.maxmind[getAsn](connection.remote.ip);
   if (!asn) return next();
 
-  var match = asn.match(/^(?:AS)([0-9]+)\s+(.*)$/);
+  const match = asn.match(/^(?:AS)([0-9]+)(?:\s+)?(.*)?$/);
   if (!match) {
     connection.logerror(plugin, 'unexpected AS format: ' + asn);
     return next();
   }
 
-  connection.results.add(plugin, { asn: match[1], org: match[2] });
+  connection.results.add(plugin, { asn: match[1], org: match[2] || '' });
   return next();
-};
+}

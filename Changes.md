@@ -1,6 +1,9 @@
 
-## 1.0.8 - 2017-0
+## 1.0.8 - 2018-01-22
 
+- parse maxmind ASN w/o Org data
+- es6: var => const|let, function () => arrow functions
+- provide ASN lookups from maxmind DBs for IPv6 addrs
 - added parse_rspamd test
 - emit rspamd DNS provider results (when enabled)
 
