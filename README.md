@@ -1,9 +1,8 @@
 [![Build Status][ci-img]][ci-url]
-[![Code Coverage][cov-img]][cov-url]
-[![Code Climate][clim-img]][clim-url]
 [![Windows Build status][appv-img]][appv-url]
-[![Greenkeeper badge][gk-img]][gk-url]
+[![Code Climate][clim-img]][clim-url]
 [![NPM][npm-img]][npm-url]
+<!--[![Code Coverage][cov-img]][cov-url]-->
 
 # haraka-plugin-asn
 

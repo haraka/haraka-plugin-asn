@@ -177,7 +177,8 @@ describe('get_dns_results', function () {
   })
 })
 
-describe('maxmind geoip db v1', () => {
+describe.skip('maxmind geoip db v1', () => {
+  /* DEAD: MaxMind no longer publishes updates */
   it('test_and_register_geoip', (done) => {
     const asn = new fixtures.plugin('asn');
     asn.cfg = { main: { }, protocols: { geoip: true } };
@@ -198,7 +199,7 @@ describe('maxmind geoip db v1', () => {
       if (asn.mmDbsAvail && asn.mmDbsAvail.length > 0) {
         const res = asn.connection.results.get('asn');
         assert.equal(res.asn, 15169);
-        assert.equal(res.org, 'Google Inc.');
+        assert.equal(res.org, 'Google LLC');
       }
       else {
         console.error('no DBs found');
@@ -221,7 +222,7 @@ describe('maxmind geoip db v1', () => {
         const res = asn.connection.results.get('asn');
         // console.log(res);
         assert.equal(res.asn, 15169);
-        assert.equal(res.org, 'Google Inc.');
+        assert.equal(res.org, 'Google LLC');
       }
       else {
         console.error('no DBs found');

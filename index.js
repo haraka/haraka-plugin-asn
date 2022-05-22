@@ -180,7 +180,7 @@ exports.lookup_via_dns = function (next, connection) {
     })
   },
   (err) => {
-    if (err) connection.results.add(plugin, { err: err });
+    if (err) connection.results.add(plugin, { err });
     next();
   })
 }
@@ -294,6 +294,7 @@ exports.add_header_provider = function (next, connection) {
     for (const k in asn[p]) {
       values.push(k + '=' + asn[p][k]);
     }
+    if (values.length === 0) return;
     connection.transaction.add_header(name, values.join(' '));
   }
 
