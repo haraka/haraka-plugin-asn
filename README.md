@@ -1,8 +1,6 @@
 [![Build Status][ci-img]][ci-url]
-[![Windows Build status][appv-img]][appv-url]
 [![Code Climate][clim-img]][clim-url]
 [![NPM][npm-img]][npm-url]
-<!--[![Code Coverage][cov-img]][cov-url]-->
 
 # haraka-plugin-asn
 
@@ -23,15 +21,11 @@ look up ASN from local GeoIP databases and/or DNS based providers.
 PS: Run something like [maxmind-geolite-mirror](https://www.npmjs.com/package/maxmind-geolite-mirror) weekly to keep your database files up-to-date.
 
 
-[ci-img]: https://travis-ci.org/haraka/haraka-plugin-asn.svg?branch=master
-[ci-url]: https://travis-ci.org/haraka/haraka-plugin-asn
+[ci-img]: https://github.com/haraka/haraka-plugin-asn/actions/workflows/ci-test.yml/badge.svg
+[ci-url]: https://github.com/haraka/haraka-plugin-asn/actions/workflows/ci-test.yml
 [cov-img]: https://codecov.io/github/haraka/haraka-plugin-asn/badge.svg
 [cov-url]: https://codecov.io/github/haraka/haraka-plugin-asn
 [clim-img]: https://codeclimate.com/github/haraka/haraka-plugin-asn/badges/gpa.svg
 [clim-url]: https://codeclimate.com/github/haraka/haraka-plugin-asn
-[appv-img]: https://ci.appveyor.com/api/projects/status/ekbtd9glvotpirug?svg=true
-[appv-url]: https://ci.appveyor.com/project/msimerson/haraka-plugin-asn
 [npm-img]: https://nodei.co/npm/haraka-plugin-asn.png
 [npm-url]: https://www.npmjs.com/package/haraka-plugin-asn
-[gk-img]: https://badges.greenkeeper.io/haraka/haraka-plugin-asn.svg
-[gk-url]: https://greenkeeper.io/
