@@ -1,23 +1,21 @@
 // determine the ASN of the connecting IP
 
 // node built-ins
-const dns     = require('dns');
-const fs      = require('fs');
-const net     = require('net');
-
-// npm modules
-const async     = require('async');
+const dns     = require('dns/promises');
+const fs      = require('fs/promises');
+const path    = require('path')
 
 let test_ip   = '66.128.51.163';
 const providers = [];
 let conf_providers = [ 'origin.asn.cymru.com', 'asn.routeviews.org', 'asn.rspamd.com' ];
 
-exports.register = function () {
+exports.register = async function () {
   this.registered = false;
 
   this.load_asn_ini();
-  this.test_and_register_dns_providers();
-  this.test_and_register_geoip();
+
+  await this.test_and_register_dns_providers();
+  await this.test_and_register_geoip();
 
   if (this.cfg.header.asn) {
     this.register_hook('data_post', 'add_header_asn');
@@ -27,29 +25,29 @@ exports.register = function () {
   }
 }
 
-exports.test_and_register_dns_providers = function () {
-  const plugin = this;
-  if (!plugin.cfg.protocols.dns) return; // disabled in config
+exports.test_and_register_dns_providers = async function () {
+  if (!this.cfg.protocols.dns) return; // disabled in config
 
-  for (let i=0; i < conf_providers.length; i++) {
-    plugin.get_dns_results(conf_providers[i], test_ip, function (err, zone, res) {
-      if (err) {
-        plugin.logerror(plugin, err);
-        return;
-      }
+  for (const zone of conf_providers) {
+    try {
+      const res = await this.get_dns_results(zone, test_ip)
+      this.logdebug(this, `${zone} succeeded`);
+
       if (!res) {
-        plugin.logerror(plugin, `${zone} failed`);
-        return;
+        this.logerror(this, `${zone} failed`);
+        continue;
       }
 
-      plugin.loginfo(plugin, `${zone} succeeded`);
-      if (providers.indexOf(zone) === -1) providers.push(zone);
-
-      if (plugin.registered) return;
-      plugin.registered = true;
-      plugin.register_hook('lookup_rdns', 'lookup_via_dns');
-    });
+      if (!providers.includes(zone)) providers.push(zone);
+      if (this.registered) continue;
+      this.registered = true;
+      this.register_hook('lookup_rdns', 'lookup_via_dns');
+    }
+    catch (err) {
+      this.logerror(this, err);
+    }
   }
+  return providers
 }
 
 exports.load_asn_ini = function () {
@@ -67,8 +65,8 @@ exports.load_asn_ini = function () {
   });
 
   const c = plugin.cfg;
-  if (c.main.providers !== undefined) {  // defined
-    if (c.main.providers === '') {   // and not empty
+  if (c.main.providers !== undefined) {
+    if (c.main.providers === '') {
       conf_providers = [];
     }
     else {
@@ -83,42 +81,33 @@ exports.load_asn_ini = function () {
   if (c.main.provider_header !== undefined) c.header.provider = c.main.provider_header;
 }
 
-exports.get_dns_results = function (zone, ip, done) {
-  const plugin = this;
+exports.get_dns_results = async function (zone, ip) {
   const query = `${ip.split('.').reverse().join('.')}.${zone}`;
-  // plugin.logdebug(plugin, "query: " + query);
-
-  // only run the callback once
-  let calledDone = false;
-  function doneOnce () {
-    if (calledDone) return;
-    calledDone = true;
-    return done.apply(plugin, arguments);
-  }
 
   const timer = setTimeout(() => {
-    return doneOnce(new Error(`${zone} timeout`), zone, null);
-  }, (plugin.cfg.main.timeout || 4) * 1000);
+    throw new Error(`${zone} timeout`);
+  }, (this.cfg.main.timeout || 4) * 1000);
 
-  dns.resolveTxt(query, function (err, addrs) {
+  try {
+    const addrs = await dns.resolveTxt(query)
     clearTimeout(timer);
-    if (calledDone) return;
-    if (err) {
-      plugin.logerror(plugin, `error: ${err} running: ${query}`);
-      return doneOnce(err, zone);
-    }
 
     if (!addrs || !addrs[0]) {
-      return doneOnce(new Error(`no results for ${query}`), zone);
+      this.logerror(this, `no results for ${query}`);
+      return
     }
 
     const first = addrs[0];
 
-    plugin.logdebug(plugin, `${zone} answers: ${first}`);
-    const result = plugin.get_result(zone, first);
+    this.logdebug(this, `${zone} answers: ${first}`);
+    const result = this.get_result(zone, first);
 
-    return doneOnce(null, zone, result);
-  })
+    return result
+  }
+  catch (err) {
+    clearTimeout(timer);
+    this.logerror(this, `error: ${err} running: ${query}`);
+  }
 }
 
 exports.get_result = function (zone, first) {
@@ -138,48 +127,51 @@ exports.lookup_via_dns = function (next, connection) {
   const plugin = this;
   if (connection.remote.is_private) return next();
 
-  async.each(providers, (zone, done) => {
+  const promises = []
 
-    connection.logdebug(plugin, `zone: ${zone}`);
+  for (const zone of providers) {
+    promises.push(new Promise((resolve, reject) => {
+      connection.logdebug(plugin, `zone: ${zone}`);
 
-    plugin.get_dns_results(zone, connection.remote.ip, (err, zone2, r) => {
-      if (err) {
-        connection.logerror(plugin, err.message);
-        return done();
+      try {
+
+        plugin.get_dns_results(zone, connection.remote.ip).then(r => {
+          if (!r) return resolve();
+
+          const results = { emit: true };
+
+          // store asn & net from any source
+          if (r.asn) results.asn = r.asn;
+          if (r.net) results.net = r.net;
+
+          // store provider specific results
+          switch (zone) {
+            case 'origin.asn.cymru.com':
+              results.cymru = r;
+              break;
+            case 'asn.routeviews.org':
+              results.routeviews = r;
+              break;
+            case 'origin.asn.spameatingmonkey.net':
+              results.monkey = r;
+              break;
+            case 'asn.rspamd.com':
+              results.rspamd = r;
+              break;
+          }
+
+          connection.results.add(plugin, results);
+          resolve(results);
+        })
       }
-      if (!r) return done();
-
-      const results = { emit: true };
-
-      // store asn & net from any source
-      if (r.asn) results.asn = r.asn;
-      if (r.net) results.net = r.net;
-
-      // store provider specific results
-      switch (zone) {
-        case 'origin.asn.cymru.com':
-          results.cymru = r;
-          break;
-        case 'asn.routeviews.org':
-          results.routeviews = r;
-          break;
-        case 'origin.asn.spameatingmonkey.net':
-          results.monkey = r;
-          break;
-        case 'asn.rspamd.com':
-          results.rspamd = r;
-          break;
+      catch (err) {
+        connection.results.add(plugin, { err })
+        resolve();
       }
+    }))
+  }
 
-      connection.results.add(plugin, results);
-
-      return done();
-    })
-  },
-  (err) => {
-    if (err) connection.results.add(plugin, { err });
-    next();
-  })
+  Promise.all(promises).then(next)
 }
 
 exports.parse_routeviews = function (thing) {
@@ -235,7 +227,7 @@ exports.parse_monkey = function (str) {
     net: r[0],
     org: r[2],
     date: r[3],
-    country: r[4]
+    country: r[4],
   };
 }
 
@@ -285,65 +277,65 @@ exports.add_header_provider = function (next, connection) {
     for (const k in asn[p]) {
       values.push(`${k}=${asn[p][k]}`);
     }
-    if (values.length === 0) return;
+    if (values.length === 0) continue;
     connection.transaction.add_header(name, values.join(' '));
   }
 
-  return next();
+  next();
 }
 
-exports.test_and_register_geoip = function () {
-  const plugin = this;
-  if (!plugin.cfg.protocols.geoip) return; // disabled in config
+exports.test_and_register_geoip = async function () {
+  if (!this.cfg.protocols.geoip) return; // disabled in config
 
   try {
-    plugin.maxmind = require('maxmind');
+    this.maxmind = require('maxmind');
+    await this.load_dbs()
+    this.register_hook('connect', 'lookup_via_maxmind');
   }
   catch (e) {
-    plugin.logerror(e);
-    plugin.logerror("unable to load maxmind, try\n\n\t'npm install -g maxmind@0.6'\n\n");
-    return;
+    this.logerror(e);
+    this.logerror("unable to load maxmind, try\n\n\t'npm install -g maxmind@0.6'\n\n");
+  }
+}
+
+exports.load_dbs = async function () {
+
+  this.dbsLoaded = 0;
+  const dbdir = this.cfg.main.dbdir || '/usr/local/share/GeoIP/';
+  const dbPath = path.join(dbdir, `GeoLite2-ASN.mmdb`);
+
+  try {
+    await fs.access(dbPath)
+
+    this.ASNLookup = await this.maxmind.open(dbPath, {
+      // this causes tests to hang, which is why mocha runs with --exit
+      watchForUpdates: true,
+      cache: {
+        max: 1000, // max items in cache
+        maxAge: 1000 * 60 * 60 // life time in milliseconds
+      }
+    })
+
+    this.loginfo(`loaded maxmind db ${dbPath}`);
+    this.dbsLoaded++;
+  }
+  catch (e) {
+    this.loginfo(`missing [access to] DB ${dbPath}`)
   }
 
-  const dbs = ['GeoIPASNum', 'GeoIPASNumv6'];
-  plugin.mmDbsAvail = [];
-
-  const dbdir = plugin.cfg.main.dbdir || '/usr/local/share/GeoIP/';
-  for (let i=0; i < dbs.length; i++) {
-    const path = `${dbdir + dbs[i]}.dat`;
-    if (!fs.existsSync(path)) continue;
-    plugin.mmDbsAvail.push(path);
-  }
-
-  plugin.maxmind.dbsLoaded = plugin.mmDbsAvail.length;
-  if (plugin.mmDbsAvail.length === 0) {
-    plugin.logerror('maxmind loaded but no GeoIP DBs found!');
-    return;
-  }
-
-  plugin.loginfo(`provider maxmind with ${plugin.mmDbsAvail.length} DBs`);
-  plugin.maxmind.init(plugin.mmDbsAvail, {indexCache: true, checkForUpdates: true});
-  plugin.register_hook('connect', 'lookup_via_maxmind');
+  return this.dbsLoaded
 }
 
 exports.lookup_via_maxmind = function (next, connection) {
-  const plugin = this;
+  if (!this.maxmind || !this.dbsLoaded) return next();
 
-  if (!plugin.maxmind) return next();
-  if (!plugin.maxmind.dbsLoaded) return next();
-
-  let getAsn = 'getAsn';
-  if (net.isIPv6(connection.remote.ip)) getAsn = 'getAsnV6';
-
-  const asn = plugin.maxmind[getAsn](connection.remote.ip);
-  if (!asn) return next();
-
-  const match = asn.match(/^(?:AS)([0-9]+)(?:\s+)?(.*)?$/);
-  if (!match) {
-    connection.logerror(plugin, `unexpected AS format: ${asn}`);
-    return next();
+  const asn = this.ASNLookup.get(connection.remote.ip)
+  if (asn) {
+    connection.results.add(this, {
+      asn: asn.autonomous_system_number,
+      org: asn.autonomous_system_organization,
+    });
   }
 
-  connection.results.add(plugin, { asn: match[1], org: match[2] || '' });
-  return next();
+  next();
 }
