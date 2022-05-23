@@ -130,8 +130,8 @@ exports.lookup_via_dns = function (next, connection) {
   const promises = []
 
   for (const zone of providers) {
-    promises.push(new Promise((resolve, reject) => {
-      connection.logdebug(plugin, `zone: ${zone}`);
+    promises.push(new Promise(resolve => {
+      // connection.logdebug(plugin, `zone: ${zone}`);
 
       try {
 
