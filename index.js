@@ -31,12 +31,12 @@ exports.test_and_register_dns_providers = async function () {
   for (const zone of conf_providers) {
     try {
       const res = await this.get_dns_results(zone, test_ip)
-      this.logdebug(this, `${zone} succeeded`);
-
       if (!res) {
         this.logerror(this, `${zone} failed`);
         continue;
       }
+
+      this.logdebug(this, `${zone} succeeded`);
 
       if (!providers.includes(zone)) providers.push(zone);
       if (this.registered) continue;
@@ -44,7 +44,7 @@ exports.test_and_register_dns_providers = async function () {
       this.register_hook('lookup_rdns', 'lookup_via_dns');
     }
     catch (err) {
-      this.logerror(this, err);
+      this.logerror(this, `zone ${zone} encountered ${err.message}`);
     }
   }
   return providers
