@@ -1,7 +1,7 @@
 // determine the ASN of the connecting IP
 
 // node built-ins
-const dns     = require('dns/promises');
+const dns     = require('dns').promises;
 const fs      = require('fs/promises');
 const path    = require('path')
 
