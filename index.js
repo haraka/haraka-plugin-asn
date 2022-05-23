@@ -13,18 +13,17 @@ const providers = [];
 let conf_providers = [ 'origin.asn.cymru.com', 'asn.routeviews.org', 'asn.rspamd.com' ];
 
 exports.register = function () {
-  const plugin = this;
-  plugin.registered = false;
+  this.registered = false;
 
-  plugin.load_asn_ini();
-  plugin.test_and_register_dns_providers();
-  plugin.test_and_register_geoip();
+  this.load_asn_ini();
+  this.test_and_register_dns_providers();
+  this.test_and_register_geoip();
 
-  if (plugin.cfg.header.asn) {
-    plugin.register_hook('data_post', 'add_header_asn');
+  if (this.cfg.header.asn) {
+    this.register_hook('data_post', 'add_header_asn');
   }
-  if (plugin.cfg.header.provider) {
-    plugin.register_hook('data_post', 'add_header_provider');
+  if (this.cfg.header.provider) {
+    this.register_hook('data_post', 'add_header_provider');
   }
 }
 
@@ -123,17 +122,15 @@ exports.get_dns_results = function (zone, ip, done) {
 }
 
 exports.get_result = function (zone, first) {
-  const plugin = this;
 
-  if (zone === 'origin.asn.cymru.com') return plugin.parse_cymru(first.join(''));
+  switch (zone) {
+    case 'origin.asn.cymru.com'           : return this.parse_cymru(first.join(''));
+    case 'asn.routeviews.org'             : return this.parse_routeviews(first);
+    case 'asn.rspamd.com'                 : return this.parse_rspamd(first.join(''));
+    case 'origin.asn.spameatingmonkey.net': return this.parse_monkey(first.join(''));
+  }
 
-  if (zone === 'asn.routeviews.org') return plugin.parse_routeviews(first);
-
-  if (zone === 'asn.rspamd.com') return plugin.parse_rspamd(first.join(''));
-
-  if (zone === 'origin.asn.spameatingmonkey.net') return plugin.parse_monkey(first.join(''));
-
-  plugin.logerror(plugin, `unrecognized ASN provider: ${zone}`);
+  this.logerror(this, `unrecognized ASN provider: ${zone}`);
   return;
 }
 
@@ -186,7 +183,6 @@ exports.lookup_via_dns = function (next, connection) {
 }
 
 exports.parse_routeviews = function (thing) {
-  const plugin = this;
   let labels;
 
   if (typeof thing === 'string' && /,/.test(thing)) {
@@ -206,7 +202,7 @@ exports.parse_routeviews = function (thing) {
   }
 
   if (labels.length !== 3) {
-    plugin.logerror(plugin, `result length not 3: ${labels.length} string="${thing}"`);
+    this.logerror(this, `result length not 3: ${labels.length} string="${thing}"`);
     return;
   }
 
@@ -214,13 +210,12 @@ exports.parse_routeviews = function (thing) {
 }
 
 exports.parse_cymru = function (str) {
-  const plugin = this;
   const r = str.split(/\s+\|\s*/);
   //  99.177.75.208.origin.asn.cymru.com. 14350 IN TXT
   //        "40431 | 208.75.176.0/21 | US | arin | 2007-03-02"
   //        "10290 | 12.129.48.0/24  | US | arin |"
   if (r.length < 4) {
-    plugin.logerror(plugin, `cymru: bad result length ${r.length} string="${str}"`);
+    this.logerror(this, `cymru: bad result length ${r.length} string="${str}"`);
     return;
   }
   return { asn: r[0], net: r[1], country: r[2], assignor: r[3], date: r[4] };
