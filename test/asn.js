@@ -10,106 +10,97 @@ describe('parse_monkey', function () {
 
   const asn = new fixtures.plugin('asn');
 
-  it('parses AS 15169/23', function (done) {
+  it('parses AS 15169/23', function () {
     assert.deepEqual(
       asn.parse_monkey('74.125.44.0/23 | AS15169 | Google Inc. | 2000-03-30'),
       { net: '74.125.44.0/23', asn: '15169', org: 'Google Inc.',
         date: '2000-03-30', country: undefined
       }
-    );
-    done();
-  });
+    )
+  })
 
-  it('parses AS 15169/16', function (done) {
+  it('parses AS 15169/16', function () {
     assert.deepEqual(
       asn.parse_monkey('74.125.0.0/16 | AS15169 | Google Inc. | 2000-03-30 | US'),
       { net: '74.125.0.0/16', asn: '15169', org: 'Google Inc.',
         date: '2000-03-30', country: 'US'
       }
-    );
-    done();
-  });
-});
+    )
+  })
+})
 
 describe('parse_routeviews', function () {
 
   const asn = new fixtures.plugin('asn');
 
-  it('40431 string, asn-only', function (done) {
+  it('40431 string, asn-only', function () {
     assert.deepEqual(
       asn.parse_routeviews('40431'),
       undefined
-    );
-    done();
-  });
+    )
+  })
 
-  it('40431 string', function (done) {
+  it('40431 string', function () {
     assert.deepEqual(
       asn.parse_routeviews('40431 208.75.176.0 21'),
       {
         asn: '40431', net: '208.75.176.0/21'
       }
     );
-    done();
   });
 
-  it('15169 CSV string', function (done) {
+  it('15169 CSV string', function () {
     assert.deepEqual(
       asn.parse_routeviews('15169,8.8.8.0,24'),
       {asn: '15169', net: '8.8.8.0/24'}
-    );
-    done();
-  });
+    )
+  })
 
-  it('40431 array', function (done) {
+  it('40431 array', function () {
     assert.deepEqual(
       asn.parse_routeviews(['40431','208.75.176.0','21']),
       {asn: '40431', net: '208.75.176.0/21' }
-    );
-    done();
-  });
-});
+    )
+  })
+})
 
 describe('parse_cymru', function () {
 
   const asn = new fixtures.plugin('asn');
 
-  it('40431', function (done) {
+  it('40431', function () {
     assert.deepEqual(
       asn.parse_cymru('40431 | 208.75.176.0/21 | US | arin | 2007-03-02'),
       { asn: '40431', net: '208.75.176.0/21', country: 'US',
         assignor: 'arin', date: '2007-03-02'
       }
     );
-    done();
   });
 
-  it('10290', function (done) {
+  it('10290', function () {
     assert.deepEqual(
       asn.parse_cymru('10290 | 12.129.48.0/24 | US | arin |'),
       { asn: '10290', net: '12.129.48.0/24', country: 'US',
         assignor: 'arin', date: ''
       }
-    );
-    done();
-  });
-});
+    )
+  })
+})
 
 describe('parse_rspamd', function () {
 
   const asn = new fixtures.plugin('asn');
 
-  it('40431', function (done) {
+  it('40431', function () {
     assert.deepEqual(
       asn.parse_rspamd('15169|8.8.8.0/24|US|arin|'),
       {
         asn: '15169', net: '8.8.8.0/24', country: 'US',
         assignor: 'arin', date: ''
       }
-    );
-    done();
-  });
-});
+    )
+  })
+})
 
 describe('get_dns_results', function () {
 
@@ -118,6 +109,7 @@ describe('get_dns_results', function () {
   asn.connection = fixtures.connection.createConnection();
 
   it('origin.asn.cymru.com', function (done) {
+    this.timeout(4000)
     asn.get_dns_results('origin.asn.cymru.com', '8.8.8.8', function (err, zone, obj) {
       if (obj) {
         assert.equal('origin.asn.cymru.com', zone);
@@ -250,4 +242,4 @@ describe.skip('maxmind geoip db v1', () => {
     },
     asn.connection);
   });
-});
+})
