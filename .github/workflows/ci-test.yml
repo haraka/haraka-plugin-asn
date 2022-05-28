@@ -1,4 +1,4 @@
-name: Tests
+name: CI
 
 on: [ push ]
 
@@ -7,18 +7,26 @@ env:
 
 jobs:
 
-  ci-test:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      name: Node.js ${{ env.node_version }}
+      with:
+        node-version: ${{ env.node_version }}
+    - run: npm install
+    - run: npm run lint
 
+  test:
     runs-on: ${{ matrix.os }}
-
     strategy:
       matrix:
         os: [ ubuntu-latest, windows-latest ]
         node-version: [ 14, 16, 18 ]
       fail-fast: false
-
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: actions/setup-node@v3
       name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
       with:
