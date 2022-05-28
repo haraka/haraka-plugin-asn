@@ -189,8 +189,6 @@ describe('maxmind geoip db', () => {
     asn.test_and_register_geoip().then((r) => {
       // console.log(r)
       assert.ok(asn.maxmind)
-      // assert.ok(asn.ASNLookup)
-      // console.log(asn.ASNLookup)
       done()
     })
   })
@@ -216,23 +214,27 @@ describe('maxmind geoip db', () => {
     })
   })
 
-  it('maxmind AS w/o org', (done) => {
+  it('maxmind AS with org', (done) => {
     const asn = new fixtures.plugin('asn');
     asn.cfg = { main: { }, protocols: { geoip: true } };
     asn.connection = fixtures.connection.createConnection();
-    asn.connection.remote.ip='216.255.64.1';
+    asn.connection.remote.ip='1.1.1.1';
     asn.test_and_register_geoip().then(() => {
-
-      asn.lookup_via_maxmind(() => {
-        if (asn.mmDbsAvail && asn.mmDbsAvail.length > 0) {
-          const res = asn.connection.results.get('asn');
-          // console.log(res);
-          assert.equal(res.asn, 63200);
-          assert.equal(res.org, '');
-        }
-        done();
-      },
-      asn.connection);
+      try {
+        asn.lookup_via_maxmind(() => {
+          if (asn.dbsLoaded) {
+            const res = asn.connection.results.get('asn');
+            assert.equal(res?.asn, 13335);
+            assert.equal(res?.org, 'CLOUDFLARENET');
+          }
+          done()
+        },
+        asn.connection);
+      }
+      catch (e) {
+        console.error(e)
+        done()
+      }
     })
   })
 })

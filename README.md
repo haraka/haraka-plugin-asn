@@ -21,10 +21,8 @@ look up ASN from local GeoIP databases and/or DNS based providers.
 PS: Run something like [maxmind-geolite-mirror](https://www.npmjs.com/package/maxmind-geolite-mirror) weekly to keep your database files up-to-date.
 
 
-[ci-img]: https://github.com/haraka/haraka-plugin-asn/actions/workflows/ci-test.yml/badge.svg
-[ci-url]: https://github.com/haraka/haraka-plugin-asn/actions/workflows/ci-test.yml
-[cov-img]: https://codecov.io/github/haraka/haraka-plugin-asn/badge.svg
-[cov-url]: https://codecov.io/github/haraka/haraka-plugin-asn
+[ci-img]: https://github.com/haraka/haraka-plugin-asn/actions/workflows/ci.yml/badge.svg
+[ci-url]: https://github.com/haraka/haraka-plugin-asn/actions/workflows/ci.yml
 [clim-img]: https://codeclimate.com/github/haraka/haraka-plugin-asn/badges/gpa.svg
 [clim-url]: https://codeclimate.com/github/haraka/haraka-plugin-asn
 [npm-img]: https://nodei.co/npm/haraka-plugin-asn.png
