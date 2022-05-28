@@ -1,9 +1,17 @@
 
+## 2.0.1 - 2022-05-27
+
+- fix: when adding headers, assure ASN is string
+- fix: when adding header, look in correct location for asn.org
+- when create conn note, only assign properties with values
+
 
 ## 2.0.0 - 2022-05-23
 
 - style: replace most callbacks with async/await
 - use builtin/promises where available
+- asn.ini: switch default dns provider to rspamd
+- dep: remove async
 
 
 ## 1.0.9 - 2022-05-22

@@ -247,18 +247,17 @@ exports.parse_rspamd = function (str) {
 exports.add_header_asn = function (next, connection) {
 
   const asn = connection.results.get('asn');
-  if (!asn || !asn.asn) return next();
-
+  if (!asn?.asn) return next();
   if (!connection.transaction) return next();
 
   if (asn.net) {
     connection.transaction.add_header('X-Haraka-ASN', `${asn.asn} ${asn.net}`);
   }
   else {
-    connection.transaction.add_header('X-Haraka-ASN', asn.asn);
+    connection.transaction.add_header('X-Haraka-ASN', `${asn.asn}`);
   }
-  if (asn.asn_org) {
-    connection.transaction.add_header('X-Haraka-ASN-Org', asn.asn_org);
+  if (asn.org) {
+    connection.transaction.add_header('X-Haraka-ASN-Org', `${asn.org}`);
   }
 
   next();
@@ -267,7 +266,7 @@ exports.add_header_asn = function (next, connection) {
 exports.add_header_provider = function (next, connection) {
 
   const asn = connection.results.get('asn');
-  if (!asn || !asn.asn) return next();
+  if (!asn?.asn) return next();
 
   for (const p in asn) {
     if (!asn[p].asn) continue;  // ignore non-object results
@@ -307,7 +306,7 @@ exports.load_dbs = async function () {
   try {
     await fs.access(dbPath)
 
-    this.ASNLookup = await this.maxmind.open(dbPath, {
+    this.lookup = await this.maxmind.open(dbPath, {
       // this causes tests to hang, which is why mocha runs with --exit
       watchForUpdates: true,
       cache: {
@@ -320,6 +319,7 @@ exports.load_dbs = async function () {
     this.dbsLoaded++;
   }
   catch (e) {
+    console.error(e)
     this.loginfo(`missing [access to] DB ${dbPath}`)
   }
 
@@ -329,11 +329,11 @@ exports.load_dbs = async function () {
 exports.lookup_via_maxmind = function (next, connection) {
   if (!this.maxmind || !this.dbsLoaded) return next();
 
-  const asn = this.ASNLookup.get(connection.remote.ip)
-  if (asn) {
+  const asn = this.lookup.get(connection.remote.ip)
+  if (asn?.autonomous_system_number || asn?.autonomous_system_organization) {
     connection.results.add(this, {
-      asn: asn.autonomous_system_number,
-      org: asn.autonomous_system_organization,
+      ...(asn.autonomous_system_number       ? { asn: asn.autonomous_system_number }       : {}),
+      ...(asn.autonomous_system_organization ? { org: asn.autonomous_system_organization } : {}),
     });
   }
 
