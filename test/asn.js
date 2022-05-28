@@ -218,25 +218,6 @@ describe('maxmind geoip db', () => {
     const asn = new fixtures.plugin('asn');
     asn.cfg = { main: { }, protocols: { geoip: true } };
     asn.connection = fixtures.connection.createConnection();
-    asn.connection.remote.ip='109.236.51.104';
-    asn.test_and_register_geoip().then(() => {
-
-      asn.lookup_via_maxmind(() => {
-        if (asn.dbsLoaded) {
-          const res = asn.connection.results.get('asn');
-          assert.equal(res?.asn, 209737);
-          assert.equal(res?.org, 'Meric Internet Teknolojileri A.S.');
-        }
-        done();
-      },
-      asn.connection);
-    })
-  })
-
-  it('maxmind AS with org', (done) => {
-    const asn = new fixtures.plugin('asn');
-    asn.cfg = { main: { }, protocols: { geoip: true } };
-    asn.connection = fixtures.connection.createConnection();
     asn.connection.remote.ip='1.1.1.1';
     asn.test_and_register_geoip().then(() => {
       try {
