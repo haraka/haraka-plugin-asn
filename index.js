@@ -87,8 +87,8 @@ exports.get_dns_results = async function (zone, ip) {
   const timeout = (prom, time, exception) => {
     let timer;
     return Promise.race([
-        prom,
-        new Promise((_r, rej) => timer = setTimeout(rej, time, exception))
+      prom,
+      new Promise((_r, rej) => timer = setTimeout(rej, time, exception))
     ]).finally(() => clearTimeout(timer));
   }
 
@@ -107,9 +107,8 @@ exports.get_dns_results = async function (zone, ip) {
     const first = addrs[0];
 
     this.logdebug(this, `${zone} answers: ${first}`);
-    const result = this.get_result(zone, first);
-
-    return result
+    
+    return this.get_result(zone, first);
   }
   catch (err) {
     this.logerror(this, `error: ${err} running: ${query}`);
