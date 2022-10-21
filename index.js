@@ -83,7 +83,7 @@ exports.load_asn_ini = function () {
 
 exports.get_dns_results = async function (zone, ip) {
   const query = `${ip.split('.').reverse().join('.')}.${zone}`;
-.
+
   const timeout = (prom, time, exception) => {
     let timer;
     return Promise.race([
