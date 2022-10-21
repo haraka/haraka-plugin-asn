@@ -83,14 +83,21 @@ exports.load_asn_ini = function () {
 
 exports.get_dns_results = async function (zone, ip) {
   const query = `${ip.split('.').reverse().join('.')}.${zone}`;
-
-  const timer = setTimeout(() => {
-    throw new Error(`${zone} timeout`);
-  }, (this.cfg.main.timeout || 4) * 1000);
+.
+  const timeout = (prom, time, exception) => {
+    let timer;
+    return Promise.race([
+        prom,
+        new Promise((_r, rej) => timer = setTimeout(rej, time, exception))
+    ]).finally(() => clearTimeout(timer));
+  }
 
   try {
-    const addrs = await dns.resolveTxt(query)
-    clearTimeout(timer);
+    const addrs = await timeout(
+      dns.resolveTxt(query),
+      (this.cfg.main.timeout || 4) * 1000,
+      new Error(`${zone} timeout`)
+    );
 
     if (!addrs || !addrs[0]) {
       this.logerror(this, `no results for ${query}`);
@@ -105,9 +112,9 @@ exports.get_dns_results = async function (zone, ip) {
     return result
   }
   catch (err) {
-    clearTimeout(timer);
     this.logerror(this, `error: ${err} running: ${query}`);
   }
+
 }
 
 exports.get_result = function (zone, first) {
