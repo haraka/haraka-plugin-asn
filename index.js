@@ -107,7 +107,7 @@ exports.get_dns_results = async function (zone, ip) {
     const first = addrs[0];
 
     this.logdebug(this, `${zone} answers: ${first}`);
-    
+
     return this.get_result(zone, first);
   }
   catch (err) {
