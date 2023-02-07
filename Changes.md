@@ -1,3 +1,6 @@
+## 2.0.2 - 2022-10-21
+
+- fix: catching DNS timeout exception
 
 ## 2.0.1 - 2022-05-27
 
