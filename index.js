@@ -294,8 +294,9 @@ exports.test_and_register_geoip = async function () {
 
   try {
     this.maxmind = require('maxmind');
-    await this.load_dbs()
-    this.register_hook('connect', 'lookup_via_maxmind');
+    if (await this.load_dbs()) {
+      this.register_hook('connect', 'lookup_via_maxmind');
+    }
   }
   catch (e) {
     this.logerror(e);
