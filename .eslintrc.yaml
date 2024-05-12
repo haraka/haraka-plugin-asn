@@ -2,24 +2,10 @@ env:
   node: true
   es6: true
   mocha: true
-  es2020: true
-
-plugins:
-  - haraka
+  es2022: true
 
 extends:
-  - eslint:recommended
-  - plugin:haraka/recommended
+  - '@haraka'
 
 rules:
-  indent: [2, 2, {"SwitchCase": 1}]
-
-root: true
-
-globals:
-  OK: true
-  CONT: true
-  DENY: true
-  DENYSOFT: true
-  DENYDISCONNECT: true
-  DENYSOFTDISCONNECT: true
+  no-unused-vars: 1
