@@ -1,6 +1,6 @@
 {
   "name": "haraka-plugin-asn",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "look up ASN of remote MTA",
   "main": "index.js",
   "files": [
@@ -9,11 +9,11 @@
   ],
   "scripts": {
     "format": "npm run prettier:fix && npm run lint:fix",
-    "lint": "npx eslint@^8 *.js test",
-    "lint:fix": "npx eslint@^8 *.js test --fix",
+    "lint": "npx eslint@^9 *.js test",
+    "lint:fix": "npx eslint@^9 *.js test --fix",
     "prettier": "npx prettier . --check",
     "prettier:fix": "npx prettier . --write --log-level=warn",
-    "test": "npx mocha@^10 --exit",
+    "test": "npx mocha@^11 --exit",
     "versions": "npx dependency-version-checker check",
     "versions:fix": "npx dependency-version-checker update"
   },
@@ -37,7 +37,11 @@
     "maxmind": "^4.3.19"
   },
   "devDependencies": {
-    "@haraka/eslint-config": "^1.1.5",
+    "@haraka/eslint-config": "^2.0.2",
     "haraka-test-fixtures": "^1.3.7"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "semi": false
   }
 }

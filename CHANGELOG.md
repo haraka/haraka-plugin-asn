@@ -4,6 +4,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+### [2.0.4] - 2025-01-26
+
+- dep(eslint): upgrade to v9
+
 ### [2.0.3] - 2023-12-13
 
 - ci: use shared ci workflows
@@ -71,4 +75,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 [2.0.0]: https://github.com/haraka/haraka-plugin-asn/releases/tag/v2.0.0
 [2.0.1]: https://github.com/haraka/haraka-plugin-asn/releases/tag/2.0.1
 [2.0.2]: https://github.com/haraka/haraka-plugin-asn/releases/tag/v2.0.2
-[2.0.3]: https://github.com/haraka/haraka-plugin-asn/releases/tag/2.0.3
+[2.0.3]: https://github.com/haraka/haraka-plugin-asn/releases/tag/v2.0.3
+[2.0.4]: https://github.com/haraka/haraka-plugin-asn/releases/tag/v2.0.4
