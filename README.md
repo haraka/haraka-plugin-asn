@@ -1,6 +1,5 @@
 [![Build Status][ci-img]][ci-url]
 [![Code Climate][clim-img]][clim-url]
-[![NPM][npm-img]][npm-url]
 
 # haraka-plugin-asn
 
@@ -22,5 +21,3 @@ PS: Run something like [maxmind-geolite-mirror](https://www.npmjs.com/package/ma
 [ci-url]: https://github.com/haraka/haraka-plugin-asn/actions/workflows/ci.yml
 [clim-img]: https://codeclimate.com/github/haraka/haraka-plugin-asn/badges/gpa.svg
 [clim-url]: https://codeclimate.com/github/haraka/haraka-plugin-asn
-[npm-img]: https://nodei.co/npm/haraka-plugin-asn.png
-[npm-url]: https://www.npmjs.com/package/haraka-plugin-asn
