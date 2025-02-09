@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - skip lookups if they've already succeeded (IE, DNS after MM)
 - emit only one log entry after successful lookups
 - return an appropriate (empty) exit code after DNS lookups
+- maxmind: switch to lookup_rdns hook (same as DNS)
 
 ### [2.0.4] - 2025-01-26
 
