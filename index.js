@@ -133,6 +133,9 @@ exports.get_result = function (zone, first) {
 exports.lookup_via_dns = function (next, connection) {
   if (connection.remote.is_private) return next()
 
+  let results = connection.results.get(this)
+  if (results?.asn) return next() // already set, skip DNS
+
   const promises = []
 
   for (const zone of providers) {
@@ -144,7 +147,7 @@ exports.lookup_via_dns = function (next, connection) {
           this.get_dns_results(zone, connection.remote.ip).then((r) => {
             if (!r) return resolve()
 
-            const results = { emit: true }
+            results = { emit: true }
 
             // store asn & net from any source
             if (r.asn) results.asn = r.asn
@@ -340,17 +343,16 @@ exports.load_dbs = async function () {
 exports.lookup_via_maxmind = function (next, connection) {
   if (!this.maxmind || !this.dbsLoaded) return next()
 
+  const results = { emit: true }
   const asn = this.lookup.get(connection.remote.ip)
-  if (asn?.autonomous_system_number || asn?.autonomous_system_organization) {
-    connection.results.add(this, {
-      ...(asn.autonomous_system_number
-        ? { asn: asn.autonomous_system_number }
-        : {}),
-      ...(asn.autonomous_system_organization
-        ? { org: asn.autonomous_system_organization }
-        : {}),
-    })
+
+  if (asn?.autonomous_system_number) {
+    results.asn = asn.autonomous_system_number
   }
+  if (asn?.autonomous_system_organization) {
+    results.org = asn.autonomous_system_organization
+  }
+  connection.results.add(this, results)
 
   next()
 }
