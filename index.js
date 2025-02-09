@@ -17,8 +17,8 @@ exports.register = async function () {
 
   this.load_asn_ini()
 
-  await this.test_and_register_dns_providers()
   await this.test_and_register_geoip()
+  await this.test_and_register_dns_providers()
 
   if (this.cfg.header.asn) {
     this.register_hook('data_post', 'add_header_asn')
@@ -133,41 +133,40 @@ exports.get_result = function (zone, first) {
 exports.lookup_via_dns = function (next, connection) {
   if (connection.remote.is_private) return next()
 
+  if (connection.results.get(this)?.asn) return next() // already set, skip
+
   const promises = []
 
   for (const zone of providers) {
     promises.push(
       new Promise((resolve) => {
-        // connection.logdebug(plugin, `zone: ${zone}`);
+        // connection.loginfo(plugin, `zone: ${zone}`);
 
         try {
           this.get_dns_results(zone, connection.remote.ip).then((r) => {
             if (!r) return resolve()
 
-            const results = { emit: true }
-
             // store asn & net from any source
-            if (r.asn) results.asn = r.asn
-            if (r.net) results.net = r.net
+            if (r.asn) connection.results.add(this, { asn: r.asn })
+            if (r.net) connection.results.add(this, { net: r.net })
 
             // store provider specific results
             switch (zone) {
               case 'origin.asn.cymru.com':
-                results.cymru = r
+                connection.results.add(this, { cymru: r })
                 break
               case 'asn.routeviews.org':
-                results.routeviews = r
+                connection.results.add(this, { routeviews: r })
                 break
               case 'origin.asn.spameatingmonkey.net':
-                results.monkey = r
+                connection.results.add(this, { monkey: r })
                 break
               case 'asn.rspamd.com':
-                results.rspamd = r
+                connection.results.add(this, { rspamd: r })
                 break
             }
 
-            connection.results.add(this, results)
-            resolve(results)
+            resolve()
           })
         } catch (err) {
           connection.results.add(this, { err })
@@ -177,7 +176,11 @@ exports.lookup_via_dns = function (next, connection) {
     )
   }
 
-  Promise.all(promises).then(next)
+  Promise.all(promises)
+    .then(() => {
+      connection.results.add(this, {emit: true})
+      next()
+    })
 }
 
 exports.parse_routeviews = function (thing) {
@@ -300,7 +303,7 @@ exports.test_and_register_geoip = async function () {
   try {
     this.maxmind = require('maxmind')
     if (await this.load_dbs()) {
-      this.register_hook('connect', 'lookup_via_maxmind')
+      this.register_hook('lookup_rdns', 'lookup_via_maxmind')
     }
   } catch (e) {
     this.logerror(e)
@@ -340,17 +343,17 @@ exports.load_dbs = async function () {
 exports.lookup_via_maxmind = function (next, connection) {
   if (!this.maxmind || !this.dbsLoaded) return next()
 
+  if (connection.results.get(this)?.asn) return next() // already set, skip
+
   const asn = this.lookup.get(connection.remote.ip)
-  if (asn?.autonomous_system_number || asn?.autonomous_system_organization) {
-    connection.results.add(this, {
-      ...(asn.autonomous_system_number
-        ? { asn: asn.autonomous_system_number }
-        : {}),
-      ...(asn.autonomous_system_organization
-        ? { org: asn.autonomous_system_organization }
-        : {}),
-    })
+
+  if (asn?.autonomous_system_number) {
+    connection.results.add(this, { asn: asn.autonomous_system_number })
   }
+  if (asn?.autonomous_system_organization) {
+    connection.results.add(this, { org: asn.autonomous_system_organization })
+  }
+  connection.results.add(this, { emit: true })
 
   next()
 }

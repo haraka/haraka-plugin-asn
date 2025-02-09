@@ -4,6 +4,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+### [2.0.5] - 2025-02-09
+
+- skip lookups if they've already succeeded (IE, DNS after MM)
+- emit only one log entry after successful lookups
+- return an appropriate (empty) exit code after DNS lookups
+- maxmind: switch to lookup_rdns hook (same as DNS)
+
 ### [2.0.4] - 2025-01-26
 
 - dep(eslint): upgrade to v9
@@ -77,3 +84,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 [2.0.2]: https://github.com/haraka/haraka-plugin-asn/releases/tag/v2.0.2
 [2.0.3]: https://github.com/haraka/haraka-plugin-asn/releases/tag/v2.0.3
 [2.0.4]: https://github.com/haraka/haraka-plugin-asn/releases/tag/v2.0.4
+[2.0.5]: https://github.com/haraka/haraka-plugin-asn/releases/tag/v2.0.5
