@@ -180,6 +180,9 @@ describe('lookup_via_dns', function () {
       asn.lookup_via_dns((rc, hosts) => {
         assert.equal(rc, undefined)
         assert.equal(hosts, undefined)
+        const r = connection.results.get(asn)
+        assert.ok(r.asn)
+        assert.ok(r.net)
         done()
       }, connection)
     })

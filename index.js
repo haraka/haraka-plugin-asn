@@ -133,44 +133,39 @@ exports.get_result = function (zone, first) {
 exports.lookup_via_dns = function (next, connection) {
   if (connection.remote.is_private) return next()
 
-  let results = connection.results.get(this)
-  if (results?.asn) return next() // already set, skip
+  if (connection.results.get(this)?.asn) return next() // already set, skip
 
   const promises = []
 
   for (const zone of providers) {
     promises.push(
       new Promise((resolve) => {
-        // connection.logdebug(plugin, `zone: ${zone}`);
+        // connection.loginfo(plugin, `zone: ${zone}`);
 
         try {
           this.get_dns_results(zone, connection.remote.ip).then((r) => {
             if (!r) return resolve()
 
-            results = { }
-
-            // store asn & net from any source
-            if (r.asn) results.asn = r.asn
-            if (r.net) results.net = r.net
+            if (r.asn) connection.results.add(this, { asn: r.asn })
+            if (r.net) connection.results.add(this, { net: r.net })
 
             // store provider specific results
             switch (zone) {
               case 'origin.asn.cymru.com':
-                results.cymru = r
+                connection.results.add(this, { cymru: r })
                 break
               case 'asn.routeviews.org':
-                results.routeviews = r
+                connection.results.add(this, { routeviews: r })
                 break
               case 'origin.asn.spameatingmonkey.net':
-                results.monkey = r
+                connection.results.add(this, { monkey: r })
                 break
               case 'asn.rspamd.com':
-                results.rspamd = r
+                connection.results.add(this, { rspamd: r })
                 break
             }
 
-            connection.results.add(this, results)
-            resolve(results)
+            resolve()
           })
         } catch (err) {
           connection.results.add(this, { err })
