@@ -177,8 +177,9 @@ describe('lookup_via_dns', function () {
     connection.remote.ip = '66.128.51.163'
 
     asn.test_and_register_dns_providers().then((providers) => {
-      asn.lookup_via_dns((r) => {
-        assert.ok(r.length)
+      asn.lookup_via_dns((rc, hosts) => {
+        assert.equal(rc, undefined)
+        assert.equal(hosts, undefined)
         done()
       }, connection)
     })

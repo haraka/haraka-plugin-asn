@@ -4,10 +4,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
-### [2.0.5] - 2025-02-06
+### [2.0.5] - 2025-02-09
 
-- if DNS enabled, skip after successful GeoIP lookup
-- emit a log entry on successful lookup
+- skip lookups if they've already succeeded (IE, DNS after MM)
+- emit only one log entry after successful lookups
+- return an appropriate (empty) exit code after DNS lookups
 
 ### [2.0.4] - 2025-01-26
 

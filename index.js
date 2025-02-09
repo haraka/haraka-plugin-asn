@@ -17,8 +17,8 @@ exports.register = async function () {
 
   this.load_asn_ini()
 
-  await this.test_and_register_dns_providers()
   await this.test_and_register_geoip()
+  await this.test_and_register_dns_providers()
 
   if (this.cfg.header.asn) {
     this.register_hook('data_post', 'add_header_asn')
@@ -134,7 +134,7 @@ exports.lookup_via_dns = function (next, connection) {
   if (connection.remote.is_private) return next()
 
   let results = connection.results.get(this)
-  if (results?.asn) return next() // already set, skip DNS
+  if (results?.asn) return next() // already set, skip
 
   const promises = []
 
@@ -147,7 +147,7 @@ exports.lookup_via_dns = function (next, connection) {
           this.get_dns_results(zone, connection.remote.ip).then((r) => {
             if (!r) return resolve()
 
-            results = { emit: true }
+            results = { }
 
             // store asn & net from any source
             if (r.asn) results.asn = r.asn
@@ -180,7 +180,11 @@ exports.lookup_via_dns = function (next, connection) {
     )
   }
 
-  Promise.all(promises).then(next)
+  Promise.all(promises)
+    .then(() => {
+      connection.results.add(this, {emit: true})
+      next()
+    })
 }
 
 exports.parse_routeviews = function (thing) {
@@ -343,16 +347,17 @@ exports.load_dbs = async function () {
 exports.lookup_via_maxmind = function (next, connection) {
   if (!this.maxmind || !this.dbsLoaded) return next()
 
-  const results = { emit: true }
+  if (connection.results.get(this)?.asn) return next() // already set, skip
+
   const asn = this.lookup.get(connection.remote.ip)
 
   if (asn?.autonomous_system_number) {
-    results.asn = asn.autonomous_system_number
+    connection.results.add(this, { asn: asn.autonomous_system_number })
   }
   if (asn?.autonomous_system_organization) {
-    results.org = asn.autonomous_system_organization
+    connection.results.add(this, { org: asn.autonomous_system_organization })
   }
-  connection.results.add(this, results)
+  connection.results.add(this, { emit: true })
 
   next()
 }
