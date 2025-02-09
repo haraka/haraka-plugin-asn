@@ -146,6 +146,7 @@ exports.lookup_via_dns = function (next, connection) {
           this.get_dns_results(zone, connection.remote.ip).then((r) => {
             if (!r) return resolve()
 
+            // store asn & net from any source
             if (r.asn) connection.results.add(this, { asn: r.asn })
             if (r.net) connection.results.add(this, { net: r.net })
 
