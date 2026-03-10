@@ -112,100 +112,93 @@ describe('get_dns_results', function () {
   asn.cfg = { main: {}, protocols: { dns: true } }
   asn.connection = fixtures.connection.createConnection()
 
-  it('origin.asn.cymru.com', function (done) {
+  it('origin.asn.cymru.com', async function () {
     this.timeout(5000)
-    asn.get_dns_results('origin.asn.cymru.com', '8.8.8.8').then((obj) => {
-      if (obj) {
+    const obj = await asn.get_dns_results('origin.asn.cymru.com', '8.8.8.8')
+    if (obj) {
+      assert.equal('15169', obj.asn)
+      assert.equal('8.8.8.0/24', obj.net)
+    } else {
+      assert.equal('something', obj)
+    }
+  })
+
+  it('asn.routeviews.org', async function () {
+    this.timeout(5000)
+    const obj = await asn.get_dns_results('asn.routeviews.org', '8.8.8.8')
+    if (obj) {
+      if (obj.asn && obj.asn === '15169') {
         assert.equal('15169', obj.asn)
-        assert.equal('8.8.8.0/24', obj.net)
-      } else {
-        assert.equal('something', obj)
       }
-      done()
-    })
+    } else {
+      assert.ok('Node DNS (c-ares) bug')
+    }
   })
 
-  it('asn.routeviews.org', function (done) {
+  it('asn.rspamd.com', async function () {
     this.timeout(5000)
-    asn.get_dns_results('asn.routeviews.org', '8.8.8.8').then((obj) => {
-      if (obj) {
-        if (obj.asn && obj.asn === '15169') {
-          assert.equal('15169', obj.asn)
-        }
-      } else {
-        assert.ok('Node DNS (c-ares) bug')
-      }
-      done()
-    })
+    const obj = await asn.get_dns_results('asn.rspamd.com', '8.8.8.8')
+    if (obj) {
+      assert.equal('15169', obj.asn)
+      assert.equal('8.8.8.0/24', obj.net)
+    } else {
+      assert.equal('something', obj)
+    }
   })
 
-  it('asn.rspamd.com', function (done) {
+  it('origin.asn.spameatingmonkey.net', async function () {
     this.timeout(5000)
-    asn.get_dns_results('asn.rspamd.com', '8.8.8.8').then((obj, zone) => {
-      if (obj) {
-        assert.equal('15169', obj.asn)
-        assert.equal('8.8.8.0/24', obj.net)
-      } else {
-        assert.equal('something', obj)
-      }
-      done()
-    })
-  })
-
-  it('origin.asn.spameatingmonkey.net', (done) => {
-    this.timeout(5000)
-    asn
-      .get_dns_results('origin.asn.spameatingmonkey.net', '8.8.8.8')
-      .then((obj, zone) => {
-        if (obj) {
-          assert.equal('15169', obj.asn)
-          assert.equal('8.8.8.0/24', obj.net)
-        } else {
-          assert.equal('something', obj)
-        }
-        done()
-      })
+    const obj = await asn.get_dns_results(
+      'origin.asn.spameatingmonkey.net',
+      '8.8.8.8',
+    )
+    if (obj) {
+      assert.equal('15169', obj.asn)
+      assert.equal('8.8.8.0/24', obj.net)
+    } else {
+      assert.equal('something', obj)
+    }
   })
 })
 
 describe('lookup_via_dns', function () {
-  it('returns results from active providers', function (done) {
+  it('returns results from active providers', async function () {
     this.timeout(5000)
     const asn = new fixtures.plugin('asn')
     asn.cfg = { main: {}, protocols: { dns: true } }
     const connection = fixtures.connection.createConnection()
     connection.remote.ip = '66.128.51.163'
 
-    asn.test_and_register_dns_providers().then((providers) => {
+    await asn.test_and_register_dns_providers()
+    await new Promise((resolve) => {
       asn.lookup_via_dns((rc, hosts) => {
         assert.equal(rc, undefined)
         assert.equal(hosts, undefined)
         const r = connection.results.get(asn)
         assert.ok(r.asn)
         assert.ok(r.net)
-        done()
+        resolve()
       }, connection)
     })
   })
 })
 
 describe('maxmind geoip db', () => {
-  it('test_and_register_geoip', (done) => {
+  it('test_and_register_geoip', async function () {
     const asn = new fixtures.plugin('asn')
     asn.cfg = { main: {}, protocols: { geoip: true } }
-    asn.test_and_register_geoip().then((r) => {
-      // console.log(r)
-      assert.ok(asn.maxmind)
-      done()
-    })
+    const r = await asn.test_and_register_geoip()
+    // console.log(r)
+    assert.ok(asn.maxmind)
   })
 
-  it('lookup_via_maxmind, IPv4', (done) => {
+  it('lookup_via_maxmind, IPv4', async function () {
     const asn = new fixtures.plugin('asn')
     asn.cfg = { main: {}, protocols: { geoip: true } }
     asn.connection = fixtures.connection.createConnection()
     asn.connection.remote.ip = '8.8.8.8'
-    asn.test_and_register_geoip().then(() => {
+    await asn.test_and_register_geoip()
+    await new Promise((resolve) => {
       asn.lookup_via_maxmind(() => {
         if (asn.dbsLoaded) {
           const res = asn.connection.results.get('asn')
@@ -214,30 +207,30 @@ describe('maxmind geoip db', () => {
         } else {
           console.error('no DBs found')
         }
-        done()
+        resolve()
       }, asn.connection)
     })
   })
 
-  it('maxmind AS with org', (done) => {
+  it('maxmind AS with org', async function () {
     const asn = new fixtures.plugin('asn')
     asn.cfg = { main: {}, protocols: { geoip: true } }
     asn.connection = fixtures.connection.createConnection()
     asn.connection.remote.ip = '1.1.1.1'
-    asn.test_and_register_geoip().then(() => {
-      try {
+    await asn.test_and_register_geoip()
+    try {
+      await new Promise((resolve) => {
         asn.lookup_via_maxmind(() => {
           if (asn.dbsLoaded) {
             const res = asn.connection.results.get('asn')
             assert.equal(res?.asn, 13335)
             assert.equal(res?.org, 'CLOUDFLARENET')
           }
-          done()
+          resolve()
         }, asn.connection)
-      } catch (e) {
-        console.error(e)
-        done()
-      }
-    })
+      })
+    } catch (e) {
+      console.error(e)
+    }
   })
 })
