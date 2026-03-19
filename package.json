@@ -1,6 +1,6 @@
 {
   "name": "haraka-plugin-asn",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "description": "look up ASN of remote MTA",
   "main": "index.js",
   "files": [
@@ -37,8 +37,8 @@
     "maxmind": "^5.0.5"
   },
   "devDependencies": {
-    "@haraka/eslint-config": "^2.0.3",
-    "haraka-test-fixtures": "^1.3.10"
+    "@haraka/eslint-config": "^2.0.4",
+    "haraka-test-fixtures": "^1.4.0"
   },
   "prettier": {
     "singleQuote": true,
