@@ -8,60 +8,61 @@ const fixtures = require('haraka-test-fixtures')
 describe('parse_monkey', function () {
   const asn = new fixtures.plugin('asn')
 
-  it('parses AS 15169/23', function () {
-    assert.deepEqual(
-      asn.parse_monkey('74.125.44.0/23 | AS15169 | Google Inc. | 2000-03-30'),
-      {
+  const cases = [
+    {
+      input: '74.125.44.0/23 | AS15169 | Google Inc. | 2000-03-30',
+      expected: {
         net: '74.125.44.0/23',
         asn: '15169',
         org: 'Google Inc.',
         date: '2000-03-30',
         country: undefined,
       },
-    )
-  })
-
-  it('parses AS 15169/16', function () {
-    assert.deepEqual(
-      asn.parse_monkey(
-        '74.125.0.0/16 | AS15169 | Google Inc. | 2000-03-30 | US',
-      ),
-      {
+      msg: 'parses AS 15169/23',
+    },
+    {
+      input: '74.125.0.0/16 | AS15169 | Google Inc. | 2000-03-30 | US',
+      expected: {
         net: '74.125.0.0/16',
         asn: '15169',
         org: 'Google Inc.',
         date: '2000-03-30',
         country: 'US',
       },
-    )
+      msg: 'parses AS 15169/16',
+    },
+  ]
+  cases.forEach(({ input, expected, msg }) => {
+    it(msg, function () {
+      assert.deepEqual(asn.parse_monkey(input), expected)
+    })
   })
 })
 
 describe('parse_routeviews', function () {
   const asn = new fixtures.plugin('asn')
 
-  it('40431 string, asn-only', function () {
-    assert.deepEqual(asn.parse_routeviews('40431'), undefined)
-  })
-
-  it('40431 string', function () {
-    assert.deepEqual(asn.parse_routeviews('40431 208.75.176.0 21'), {
-      asn: '40431',
-      net: '208.75.176.0/21',
-    })
-  })
-
-  it('15169 CSV string', function () {
-    assert.deepEqual(asn.parse_routeviews('15169,8.8.8.0,24'), {
-      asn: '15169',
-      net: '8.8.8.0/24',
-    })
-  })
-
-  it('40431 array', function () {
-    assert.deepEqual(asn.parse_routeviews(['40431', '208.75.176.0', '21']), {
-      asn: '40431',
-      net: '208.75.176.0/21',
+  const cases = [
+    { input: '40431', expected: undefined, msg: '40431 string, asn-only' },
+    {
+      input: '40431 208.75.176.0 21',
+      expected: { asn: '40431', net: '208.75.176.0/21' },
+      msg: '40431 string',
+    },
+    {
+      input: '15169,8.8.8.0,24',
+      expected: { asn: '15169', net: '8.8.8.0/24' },
+      msg: '15169 CSV string',
+    },
+    {
+      input: ['40431', '208.75.176.0', '21'],
+      expected: { asn: '40431', net: '208.75.176.0/21' },
+      msg: '40431 array',
+    },
+  ]
+  cases.forEach(({ input, expected, msg }) => {
+    it(msg, function () {
+      assert.deepEqual(asn.parse_routeviews(input), expected)
     })
   })
 })
@@ -69,26 +70,33 @@ describe('parse_routeviews', function () {
 describe('parse_cymru', function () {
   const asn = new fixtures.plugin('asn')
 
-  it('40431', function () {
-    assert.deepEqual(
-      asn.parse_cymru('40431 | 208.75.176.0/21 | US | arin | 2007-03-02'),
-      {
+  const cases = [
+    {
+      input: '40431 | 208.75.176.0/21 | US | arin | 2007-03-02',
+      expected: {
         asn: '40431',
         net: '208.75.176.0/21',
         country: 'US',
         assignor: 'arin',
         date: '2007-03-02',
       },
-    )
-  })
-
-  it('10290', function () {
-    assert.deepEqual(asn.parse_cymru('10290 | 12.129.48.0/24 | US | arin |'), {
-      asn: '10290',
-      net: '12.129.48.0/24',
-      country: 'US',
-      assignor: 'arin',
-      date: '',
+      msg: '40431',
+    },
+    {
+      input: '10290 | 12.129.48.0/24 | US | arin |',
+      expected: {
+        asn: '10290',
+        net: '12.129.48.0/24',
+        country: 'US',
+        assignor: 'arin',
+        date: '',
+      },
+      msg: '10290',
+    },
+  ]
+  cases.forEach(({ input, expected, msg }) => {
+    it(msg, function () {
+      assert.deepEqual(asn.parse_cymru(input), expected)
     })
   })
 })
@@ -97,6 +105,15 @@ describe('parse_rspamd', function () {
   const asn = new fixtures.plugin('asn')
 
   it('40431', function () {
+    assert.deepEqual(asn.parse_rspamd('15169|8.8.8.0/24|US|arin|'), {
+      asn: '15169',
+      net: '8.8.8.0/24',
+      country: 'US',
+      assignor: 'arin',
+      date: '',
+    })
+  })
+  it('15169', function () {
     assert.deepEqual(asn.parse_rspamd('15169|8.8.8.0/24|US|arin|'), {
       asn: '15169',
       net: '8.8.8.0/24',
@@ -148,10 +165,7 @@ describe('get_dns_results', function () {
 
   it('origin.asn.spameatingmonkey.net', async function () {
     this.timeout(5000)
-    const obj = await asn.get_dns_results(
-      'origin.asn.spameatingmonkey.net',
-      '8.8.8.8',
-    )
+    const obj = await asn.get_dns_results('origin.asn.spameatingmonkey.net', '8.8.8.8')
     if (obj) {
       assert.equal('15169', obj.asn)
       assert.equal('8.8.8.0/24', obj.net)

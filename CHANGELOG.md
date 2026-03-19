@@ -4,6 +4,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+### [2.0.6] - 2026-03-18
+
+- test: coverage is enabled
+- test: tabulated some of the test cases
+- test: remove done callbacks in synchronous tests (#28)
+- ci: update workflows
+
 ### [2.0.5] - 2025-02-09
 
 - skip lookups if they've already succeeded (IE, DNS after MM)
@@ -85,3 +92,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 [2.0.3]: https://github.com/haraka/haraka-plugin-asn/releases/tag/v2.0.3
 [2.0.4]: https://github.com/haraka/haraka-plugin-asn/releases/tag/v2.0.4
 [2.0.5]: https://github.com/haraka/haraka-plugin-asn/releases/tag/v2.0.5
+[2.0.6]: https://github.com/haraka/haraka-plugin-asn/releases/tag/v2.0.6

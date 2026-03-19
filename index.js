@@ -6,11 +6,7 @@ const path = require('node:path')
 
 let test_ip = '66.128.51.163'
 const providers = []
-let conf_providers = [
-  'origin.asn.cymru.com',
-  'asn.routeviews.org',
-  'asn.rspamd.com',
-]
+let conf_providers = ['origin.asn.cymru.com', 'asn.routeviews.org', 'asn.rspamd.com']
 
 exports.register = async function () {
   this.registered = false
@@ -57,12 +53,7 @@ exports.load_asn_ini = function () {
   plugin.cfg = plugin.config.get(
     'asn.ini',
     {
-      booleans: [
-        '+header.asn',
-        '-header.provider',
-        '+protocols.dns',
-        '+protocols.geoip',
-      ],
+      booleans: ['+header.asn', '-header.provider', '+protocols.dns', '+protocols.geoip'],
     },
     function () {
       plugin.load_asn_ini()
@@ -176,11 +167,10 @@ exports.lookup_via_dns = function (next, connection) {
     )
   }
 
-  Promise.all(promises)
-    .then(() => {
-      connection.results.add(this, {emit: true})
-      next()
-    })
+  Promise.all(promises).then(() => {
+    connection.results.add(this, { emit: true })
+    next()
+  })
 }
 
 exports.parse_routeviews = function (thing) {
@@ -202,10 +192,7 @@ exports.parse_routeviews = function (thing) {
   }
 
   if (labels.length !== 3) {
-    this.logerror(
-      this,
-      `result length not 3: ${labels.length} string="${thing}"`,
-    )
+    this.logerror(this, `result length not 3: ${labels.length} string="${thing}"`)
     return
   }
 
@@ -230,10 +217,7 @@ exports.parse_monkey = function (str) {
   // "74.125.44.0/23 | AS15169 | Google Inc. | 2000-03-30"
   // "74.125.0.0/16 | AS15169 | Google Inc. | 2000-03-30 | US"
   if (r.length < 3) {
-    plugin.logerror(
-      plugin,
-      `monkey: bad result length ${r.length} string="${str}"`,
-    )
+    plugin.logerror(plugin, `monkey: bad result length ${r.length} string="${str}"`)
     return
   }
   return {
@@ -252,10 +236,7 @@ exports.parse_rspamd = function (str) {
   //        "15169|8.8.8.0/24|US|arin|"
 
   if (r.length < 4) {
-    plugin.logerror(
-      plugin,
-      `rspamd: bad result length ${r.length} string="${str}"`,
-    )
+    plugin.logerror(plugin, `rspamd: bad result length ${r.length} string="${str}"`)
     return
   }
   return { asn: r[0], net: r[1], country: r[2], assignor: r[3], date: r[4] }
@@ -307,9 +288,7 @@ exports.test_and_register_geoip = async function () {
     }
   } catch (e) {
     this.logerror(e)
-    this.logerror(
-      "unable to load maxmind, try\n\n\t'npm install -g maxmind@0.6'\n\n",
-    )
+    this.logerror("unable to load maxmind, try\n\n\t'npm install -g maxmind@0.6'\n\n")
   }
 }
 
