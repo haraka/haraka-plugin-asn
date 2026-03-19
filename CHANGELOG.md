@@ -6,11 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### [2.0.6] - 2026-03-18
 
-#### Changed
-
-- v2.0.6
+- 
 - remove done callbacks in synchronous tests (#28)
-
 
 ### [2.0.5] - 2025-02-09
 
