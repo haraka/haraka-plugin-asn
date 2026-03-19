@@ -6,8 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### [2.0.6] - 2026-03-18
 
--
-- remove done callbacks in synchronous tests (#28)
+- test: coverage is enabled
+- test: tabulated some of the test cases
+- test: remove done callbacks in synchronous tests (#28)
+- ci: update workflows
 
 ### [2.0.5] - 2025-02-09
 
