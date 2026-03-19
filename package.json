@@ -42,6 +42,7 @@
     "haraka-test-fixtures": "^1.4.0"
   },
   "prettier": {
+    "printWidth": 90,
     "singleQuote": true,
     "semi": false
   }
