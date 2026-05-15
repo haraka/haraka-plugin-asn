@@ -1,6 +1,6 @@
 {
   "name": "haraka-plugin-asn",
-  "version": "2.0.6",
+  "version": "2.1.0",
   "description": "look up ASN of remote MTA",
   "main": "index.js",
   "files": [
@@ -13,7 +13,7 @@
     "lint:fix": "npx eslint *.js test --fix",
     "prettier": "npx prettier . --check",
     "prettier:fix": "npx prettier . --write --log-level=warn",
-    "test": "npx mocha --exit",
+    "test": "node --test test/*.js",
     "versions": "npx npm-dep-mgr check",
     "versions:fix": "npx npm-dep-mgr update",
     "test:coverage": "npx c8 --reporter=text --reporter=text-summary npm test"
