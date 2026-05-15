@@ -288,7 +288,7 @@ exports.test_and_register_geoip = async function () {
     }
   } catch (e) {
     this.logerror(e)
-    this.logerror("unable to load maxmind, try\n\n\t'npm install -g maxmind@0.6'\n\n")
+    this.logerror("unable to load maxmind, try\n\n\t'npm install -g maxmind'\n\n")
   }
 }
 

@@ -1,17 +1,14 @@
 const assert = require('node:assert/strict')
 const { beforeEach, describe, it } = require('node:test')
-
+const path = require('node:path')
 const fixtures = require('haraka-test-fixtures')
 
 describe('maxmind geoip db', () => {
   let plugin
   beforeEach(async () => {
     plugin = new fixtures.plugin('asn')
-    plugin.cfg = {
-      main: {},
-      protocols: { dns: true },
-      header: { asn: true, provider: true },
-    }
+    plugin.config = plugin.config.module_config(path.resolve('test'))
+    plugin.load_asn_ini()
     plugin.cfg.protocols.geoip = true
     await plugin.test_and_register_geoip()
   })
