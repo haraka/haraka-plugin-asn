@@ -5,7 +5,9 @@ const assert = require('node:assert')
 // npm installed modules
 const fixtures = require('haraka-test-fixtures')
 
-describe('parse_monkey', function () {
+const { describe, it } = require('node:test')
+
+describe('parse_monkey', () => {
   const asn = new fixtures.plugin('asn')
 
   const cases = [
@@ -33,13 +35,13 @@ describe('parse_monkey', function () {
     },
   ]
   cases.forEach(({ input, expected, msg }) => {
-    it(msg, function () {
+    it(msg, () => {
       assert.deepEqual(asn.parse_monkey(input), expected)
     })
   })
 })
 
-describe('parse_routeviews', function () {
+describe('parse_routeviews', () => {
   const asn = new fixtures.plugin('asn')
 
   const cases = [
@@ -61,13 +63,13 @@ describe('parse_routeviews', function () {
     },
   ]
   cases.forEach(({ input, expected, msg }) => {
-    it(msg, function () {
+    it(msg, () => {
       assert.deepEqual(asn.parse_routeviews(input), expected)
     })
   })
 })
 
-describe('parse_cymru', function () {
+describe('parse_cymru', () => {
   const asn = new fixtures.plugin('asn')
 
   const cases = [
@@ -95,16 +97,16 @@ describe('parse_cymru', function () {
     },
   ]
   cases.forEach(({ input, expected, msg }) => {
-    it(msg, function () {
+    it(msg, () => {
       assert.deepEqual(asn.parse_cymru(input), expected)
     })
   })
 })
 
-describe('parse_rspamd', function () {
+describe('parse_rspamd', () => {
   const asn = new fixtures.plugin('asn')
 
-  it('40431', function () {
+  it('40431', () => {
     assert.deepEqual(asn.parse_rspamd('15169|8.8.8.0/24|US|arin|'), {
       asn: '15169',
       net: '8.8.8.0/24',
@@ -113,7 +115,7 @@ describe('parse_rspamd', function () {
       date: '',
     })
   })
-  it('15169', function () {
+  it('15169', () => {
     assert.deepEqual(asn.parse_rspamd('15169|8.8.8.0/24|US|arin|'), {
       asn: '15169',
       net: '8.8.8.0/24',
@@ -124,13 +126,12 @@ describe('parse_rspamd', function () {
   })
 })
 
-describe('get_dns_results', function () {
+describe('get_dns_results', () => {
   const asn = new fixtures.plugin('asn')
   asn.cfg = { main: {}, protocols: { dns: true } }
   asn.connection = fixtures.connection.createConnection()
 
-  it('origin.asn.cymru.com', async function () {
-    this.timeout(5000)
+  it('origin.asn.cymru.com', { timeout: 5000 }, async () => {
     const obj = await asn.get_dns_results('origin.asn.cymru.com', '8.8.8.8')
     if (obj) {
       assert.equal('15169', obj.asn)
@@ -140,8 +141,7 @@ describe('get_dns_results', function () {
     }
   })
 
-  it('asn.routeviews.org', async function () {
-    this.timeout(5000)
+  it('asn.routeviews.org', { timeout: 5000 }, async () => {
     const obj = await asn.get_dns_results('asn.routeviews.org', '8.8.8.8')
     if (obj) {
       if (obj.asn && obj.asn === '15169') {
@@ -152,8 +152,7 @@ describe('get_dns_results', function () {
     }
   })
 
-  it('asn.rspamd.com', async function () {
-    this.timeout(5000)
+  it('asn.rspamd.com', { timeout: 5000 }, async () => {
     const obj = await asn.get_dns_results('asn.rspamd.com', '8.8.8.8')
     if (obj) {
       assert.equal('15169', obj.asn)
@@ -163,8 +162,7 @@ describe('get_dns_results', function () {
     }
   })
 
-  it('origin.asn.spameatingmonkey.net', async function () {
-    this.timeout(5000)
+  it('origin.asn.spameatingmonkey.net', { timeout: 5000 }, async () => {
     const obj = await asn.get_dns_results('origin.asn.spameatingmonkey.net', '8.8.8.8')
     if (obj) {
       assert.equal('15169', obj.asn)
@@ -175,9 +173,8 @@ describe('get_dns_results', function () {
   })
 })
 
-describe('lookup_via_dns', function () {
-  it('returns results from active providers', async function () {
-    this.timeout(5000)
+describe('lookup_via_dns', () => {
+  it('returns results from active providers', { timeout: 5000 }, async () => {
     const asn = new fixtures.plugin('asn')
     asn.cfg = { main: {}, protocols: { dns: true } }
     const connection = fixtures.connection.createConnection()
@@ -198,7 +195,7 @@ describe('lookup_via_dns', function () {
 })
 
 describe('maxmind geoip db', () => {
-  it('test_and_register_geoip', async function () {
+  it('test_and_register_geoip', async () => {
     const asn = new fixtures.plugin('asn')
     asn.cfg = { main: {}, protocols: { geoip: true } }
     const r = await asn.test_and_register_geoip()
@@ -206,7 +203,7 @@ describe('maxmind geoip db', () => {
     assert.ok(asn.maxmind)
   })
 
-  it('lookup_via_maxmind, IPv4', async function () {
+  it('lookup_via_maxmind, IPv4', async () => {
     const asn = new fixtures.plugin('asn')
     asn.cfg = { main: {}, protocols: { geoip: true } }
     asn.connection = fixtures.connection.createConnection()
@@ -226,7 +223,7 @@ describe('maxmind geoip db', () => {
     })
   })
 
-  it('maxmind AS with org', async function () {
+  it('maxmind AS with org', async () => {
     const asn = new fixtures.plugin('asn')
     asn.cfg = { main: {}, protocols: { geoip: true } }
     asn.connection = fixtures.connection.createConnection()

@@ -13,7 +13,7 @@
     "lint:fix": "npx eslint *.js test --fix",
     "prettier": "npx prettier . --check",
     "prettier:fix": "npx prettier . --write --log-level=warn",
-    "test": "node --test test/*.js",
+    "test": "node --test --test-force-exit test/*.js",
     "versions": "npx npm-dep-mgr check",
     "versions:fix": "npx npm-dep-mgr update",
     "test:coverage": "npx c8 --reporter=text --reporter=text-summary npm test"
@@ -35,11 +35,11 @@
   },
   "homepage": "https://github.com/haraka/haraka-plugin-asn#readme",
   "dependencies": {
-    "maxmind": "^5.0.5"
+    "maxmind": "^5.0.6"
   },
   "devDependencies": {
     "@haraka/eslint-config": "^2.0.4",
-    "haraka-test-fixtures": "^1.4.0"
+    "haraka-test-fixtures": "^1.4.3"
   },
   "prettier": {
     "printWidth": 90,

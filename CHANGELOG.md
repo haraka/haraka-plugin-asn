@@ -6,10 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### [2.1.0] - 2026-05-15
 
-#### Changed
-
-- v2.1.0
-
+- test: runner is now node:test
+- deps: bump versions
 
 ### [2.0.6] - 2026-03-18
 
