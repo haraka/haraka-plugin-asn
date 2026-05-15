@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### [2.1.0] - 2026-05-15
 
+- fix: trim string with trim() vs \s+
 - test: runner is now node:test
 - deps: bump versions
 
