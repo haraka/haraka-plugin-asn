@@ -200,7 +200,7 @@ exports.parse_routeviews = function (thing) {
 }
 
 exports.parse_cymru = function (str) {
-  const r = str.split(/\s+\|\s*/)
+  const r = str.split('|').map((s) => s.trim())
   //  99.177.75.208.origin.asn.cymru.com. 14350 IN TXT
   //        "40431 | 208.75.176.0/21 | US | arin | 2007-03-02"
   //        "10290 | 12.129.48.0/24  | US | arin |"
@@ -213,7 +213,7 @@ exports.parse_cymru = function (str) {
 
 exports.parse_monkey = function (str) {
   const plugin = this
-  const r = str.split(/\s+\|\s+/)
+  const r = str.split('|').map((s) => s.trim())
   // "74.125.44.0/23 | AS15169 | Google Inc. | 2000-03-30"
   // "74.125.0.0/16 | AS15169 | Google Inc. | 2000-03-30 | US"
   if (r.length < 3) {
@@ -231,7 +231,7 @@ exports.parse_monkey = function (str) {
 
 exports.parse_rspamd = function (str) {
   const plugin = this
-  const r = str.split(/\s*\|\s*/)
+  const r = str.split('|').map((s) => s.trim())
   //  8.8.8.8.asn.rspamd.com. 14350 IN TXT
   //        "15169|8.8.8.0/24|US|arin|"
 
@@ -288,7 +288,7 @@ exports.test_and_register_geoip = async function () {
     }
   } catch (e) {
     this.logerror(e)
-    this.logerror("unable to load maxmind, try\n\n\t'npm install -g maxmind@0.6'\n\n")
+    this.logerror("unable to load maxmind, try\n\n\t'npm install -g maxmind'\n\n")
   }
 }
 

@@ -4,6 +4,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+### [2.1.0] - 2026-05-15
+
+- fix: trim string with trim() vs \s+
+- test: runner is now node:test
+- deps: bump versions
+
 ### [2.0.6] - 2026-03-18
 
 - test: coverage is enabled
@@ -93,3 +99,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 [2.0.4]: https://github.com/haraka/haraka-plugin-asn/releases/tag/v2.0.4
 [2.0.5]: https://github.com/haraka/haraka-plugin-asn/releases/tag/v2.0.5
 [2.0.6]: https://github.com/haraka/haraka-plugin-asn/releases/tag/v2.0.6
+[2.1.0]: https://github.com/haraka/haraka-plugin-asn/releases/tag/v2.1.0
