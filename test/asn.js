@@ -133,6 +133,16 @@ describe('add_header_provider', () => {
 })
 
 describe('lookup_via_dns', () => {
+  it('skips when protocols.dns is disabled at runtime', async () => {
+    const plugin = makePlugin()
+    // Replace cfg entirely to avoid mutating haraka-config's shared cached object
+    plugin.cfg = { ...plugin.cfg, protocols: { ...plugin.cfg.protocols, dns: false } }
+    const connection = fixtures.connection.createConnection()
+    connection.remote.ip = '8.8.8.8'
+    await new Promise((resolve) => plugin.lookup_via_dns(resolve, connection))
+    assert.ok(!connection.results.get(plugin)?.asn, 'no asn stored when dns disabled')
+  })
+
   it('skips private IPs', async () => {
     const plugin = makePlugin()
     const connection = fixtures.connection.createConnection()
@@ -205,5 +215,227 @@ describe('get_dns_results', () => {
     assert.ok(r.asn, 'has asn')
     assert.ok(r.net, 'has net')
     assert.match(r.net, /\/\d+$/, 'net is in CIDR notation')
+  })
+
+  it('returns undefined for IPv6 addresses without making a DNS query', async () => {
+    const p = makePlugin()
+    assert.equal(await p.get_dns_results('origin.asn.cymru.com', '2001:db8::1'), undefined)
+    assert.equal(await p.get_dns_results('origin.asn.cymru.com', '::1'), undefined)
+  })
+
+  it('returns undefined for non-IP input', async () => {
+    const p = makePlugin()
+    assert.equal(await p.get_dns_results('origin.asn.cymru.com', 'not-an-ip'), undefined)
+  })
+})
+
+describe('load_asn_ini', () => {
+  const withCfg = (main) => {
+    const p = new fixtures.plugin('asn')
+    p.config.get = () => ({
+      main,
+      header: { asn: true, provider: false },
+      protocols: { dns: true, geoip: true },
+    })
+    p.load_asn_ini()
+    return p
+  }
+
+  it('empty providers string disables all dns providers', async () => {
+    const p = withCfg({ providers: '' })
+    let called = false
+    p.get_dns_results = async () => {
+      called = true
+      return { asn: '1' }
+    }
+    await p.test_and_register_dns_providers()
+    assert.equal(called, false) // no zones to query
+  })
+
+  it('parses a delimited providers list and a custom test_ip', async () => {
+    const p = withCfg({ providers: 'a.example b.example', test_ip: '1.2.3.4' })
+    const seen = []
+    p.get_dns_results = async (zone) => {
+      seen.push(zone)
+      return null // force the "failed" branch
+    }
+    await p.test_and_register_dns_providers()
+    assert.deepEqual(seen, ['a.example', 'b.example'])
+  })
+})
+
+describe('test_and_register_dns_providers', () => {
+  it('returns early when protocols.dns is disabled', async () => {
+    const p = makePlugin()
+    p.cfg.protocols.dns = false
+    assert.equal(await p.test_and_register_dns_providers(), undefined)
+  })
+
+  const pinned = (providers) => {
+    const p = new fixtures.plugin('asn')
+    p.config.get = () => ({
+      main: { providers },
+      header: {},
+      protocols: { dns: true, geoip: false },
+    })
+    p.load_asn_ini()
+    return p
+  }
+
+  it('registers the lookup_rdns hook on first success', async () => {
+    const p = pinned('origin.asn.cymru.com')
+    p.get_dns_results = async () => ({ asn: '15169' })
+    await p.test_and_register_dns_providers()
+    assert.ok(p.hooks.lookup_rdns?.includes('lookup_via_dns'))
+  })
+
+  it('logs and continues when a zone throws', async () => {
+    const p = pinned('z.example')
+    let called = false
+    p.get_dns_results = async () => {
+      called = true
+      throw new Error('dns boom')
+    }
+    await assert.doesNotReject(() => p.test_and_register_dns_providers())
+    assert.equal(called, true)
+  })
+})
+
+describe('lookup_via_dns provider routing', () => {
+  it('stores per-provider results for each zone', async () => {
+    const p = new fixtures.plugin('asn')
+    p.config.get = () => ({
+      main: {
+        providers:
+          'origin.asn.cymru.com asn.routeviews.org asn.rspamd.com origin.asn.spameatingmonkey.net',
+      },
+      header: {},
+      protocols: { dns: true, geoip: false },
+    })
+    p.load_asn_ini()
+    p.get_dns_results = async () => ({ asn: '15169', net: '8.8.8.0/24' })
+    await p.test_and_register_dns_providers()
+
+    const connection = fixtures.connection.createConnection()
+    connection.remote.ip = '8.8.8.8'
+    await new Promise((resolve) => p.lookup_via_dns(resolve, connection))
+
+    const r = connection.results.get(p)
+    assert.equal(r.asn, '15169')
+    assert.ok(r.cymru && r.routeviews && r.rspamd && r.monkey)
+  })
+
+  it('captures a synchronous get_dns_results throw as an err result', async () => {
+    const p = new fixtures.plugin('asn')
+    p.config.get = () => ({
+      main: { providers: 'origin.asn.cymru.com' },
+      header: {},
+      protocols: { dns: true, geoip: false },
+    })
+    p.load_asn_ini()
+    p.get_dns_results = async () => ({ asn: '1' })
+    await p.test_and_register_dns_providers()
+    p.get_dns_results = () => {
+      throw new Error('sync boom')
+    }
+    const connection = fixtures.connection.createConnection()
+    connection.remote.ip = '8.8.8.8'
+    await new Promise((resolve) => p.lookup_via_dns(resolve, connection))
+    assert.ok(connection.results.get(p).err.length)
+  })
+})
+
+describe('geoip / maxmind', () => {
+  it('test_and_register_geoip returns early when geoip disabled', async () => {
+    const p = makePlugin()
+    p.cfg.protocols.geoip = false
+    await p.test_and_register_geoip()
+    assert.ok(!p.hooks?.lookup_rdns?.includes('lookup_via_maxmind'))
+  })
+
+  it('test_and_register_geoip logs when load_dbs throws', async () => {
+    const p = makePlugin()
+    p.cfg.protocols.geoip = true
+    p.load_dbs = async () => {
+      throw new Error('maxmind boom')
+    }
+    await assert.doesNotReject(() => p.test_and_register_geoip())
+  })
+
+  it('load_dbs returns 0 when the db file is absent', async () => {
+    const p = makePlugin()
+    p.cfg.main.dbdir = '/no/such/dir/at/all'
+    p.maxmind = require('maxmind')
+    assert.equal(await p.load_dbs(), 0)
+  })
+
+  it('lookup_via_maxmind passes through without a loaded db', async () => {
+    const p = makePlugin()
+    p.maxmind = null
+    const connection = fixtures.connection.createConnection()
+    let called
+    p.lookup_via_maxmind((rc) => (called = rc), connection)
+    assert.equal(called, undefined)
+  })
+
+  it('lookup_via_maxmind records asn/org from a db hit', async () => {
+    const p = makePlugin()
+    p.maxmind = {}
+    p.dbsLoaded = 1
+    p.lookup = {
+      get: () => ({
+        autonomous_system_number: 15169,
+        autonomous_system_organization: 'GOOGLE',
+      }),
+    }
+    const connection = fixtures.connection.createConnection()
+    connection.remote.ip = '8.8.8.8'
+    await new Promise((resolve) => p.lookup_via_maxmind(resolve, connection))
+    const r = connection.results.get(p)
+    assert.equal(r.asn, 15169)
+    assert.equal(r.org, 'GOOGLE')
+  })
+})
+
+describe('load_asn_ini hot-reload', () => {
+  it('clears providers and re-runs DNS registration on config file change', async () => {
+    const p = new fixtures.plugin('asn')
+    let reloadCallback
+
+    p.config.get = (filename, opts, cb) => {
+      reloadCallback = cb
+      return { main: {}, header: {}, protocols: { dns: true, geoip: false } }
+    }
+
+    let registerCount = 0
+    p.test_and_register_dns_providers = async () => {
+      registerCount++
+    }
+
+    p.load_asn_ini()
+    assert.equal(registerCount, 0, 'not called during initial load')
+    assert.ok(reloadCallback, 'hot-reload callback was captured')
+
+    reloadCallback()
+    // Allow the async test_and_register_dns_providers to be scheduled
+    await new Promise((resolve) => setImmediate(resolve))
+
+    assert.equal(registerCount, 1, 'called once on reload')
+  })
+})
+
+describe('register', () => {
+  it('registers data_post hooks per header config', async () => {
+    const p = new fixtures.plugin('asn')
+    p.config.get = () => ({
+      main: {},
+      header: { asn: true, provider: true },
+      protocols: { dns: false, geoip: false },
+    })
+    p.test_and_register_geoip = async () => {}
+    p.test_and_register_dns_providers = async () => {}
+    await p.register()
+    assert.ok(p.hooks.data_post.includes('add_header_asn'))
+    assert.ok(p.hooks.data_post.includes('add_header_provider'))
   })
 })

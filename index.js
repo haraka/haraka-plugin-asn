@@ -2,6 +2,7 @@
 
 const dns = require('node:dns').promises
 const fs = require('node:fs/promises')
+const net = require('node:net')
 const path = require('node:path')
 
 let test_ip = '66.128.51.163'
@@ -49,18 +50,21 @@ exports.test_and_register_dns_providers = async function () {
 }
 
 exports.load_asn_ini = function () {
-  const plugin = this
-  plugin.cfg = plugin.config.get(
+  this.cfg = this.config.get(
     'asn.ini',
     {
       booleans: ['+header.asn', '-header.provider', '+protocols.dns', '+protocols.geoip'],
     },
-    function () {
-      plugin.load_asn_ini()
+    () => {
+      this.load_asn_ini()
+      providers.length = 0
+      this.test_and_register_dns_providers().catch((err) => {
+        this.logerror(this, `provider refresh failed: ${err.message}`)
+      })
     },
   )
 
-  const c = plugin.cfg
+  const c = this.cfg
   if (c.main.providers !== undefined) {
     if (c.main.providers === '') {
       conf_providers = []
@@ -73,6 +77,10 @@ exports.load_asn_ini = function () {
 }
 
 exports.get_dns_results = async function (zone, ip) {
+  if (net.isIP(ip) !== 4) {
+    this.logdebug(this, `skipping DNS ASN lookup for non-IPv4 address ${ip}`)
+    return
+  }
   const query = `${ip.split('.').reverse().join('.')}.${zone}`
 
   const timeout = (prom, time, exception) => {
@@ -122,6 +130,7 @@ exports.get_result = function (zone, first) {
 }
 
 exports.lookup_via_dns = function (next, connection) {
+  if (!this.cfg.protocols.dns) return next()
   if (connection.remote.is_private) return next()
 
   if (connection.results.get(this)?.asn) return next() // already set, skip
@@ -131,7 +140,7 @@ exports.lookup_via_dns = function (next, connection) {
   for (const zone of providers) {
     promises.push(
       new Promise((resolve) => {
-        // connection.loginfo(plugin, `zone: ${zone}`);
+        // connection.loginfo(this, `zone: ${zone}`);
 
         try {
           this.get_dns_results(zone, connection.remote.ip).then((r) => {
@@ -212,12 +221,11 @@ exports.parse_cymru = function (str) {
 }
 
 exports.parse_monkey = function (str) {
-  const plugin = this
   const r = str.split('|').map((s) => s.trim())
   // "74.125.44.0/23 | AS15169 | Google Inc. | 2000-03-30"
   // "74.125.0.0/16 | AS15169 | Google Inc. | 2000-03-30 | US"
   if (r.length < 3) {
-    plugin.logerror(plugin, `monkey: bad result length ${r.length} string="${str}"`)
+    this.logerror(this, `monkey: bad result length ${r.length} string="${str}"`)
     return
   }
   return {
@@ -230,19 +238,19 @@ exports.parse_monkey = function (str) {
 }
 
 exports.parse_rspamd = function (str) {
-  const plugin = this
   const r = str.split('|').map((s) => s.trim())
   //  8.8.8.8.asn.rspamd.com. 14350 IN TXT
   //        "15169|8.8.8.0/24|US|arin|"
 
   if (r.length < 4) {
-    plugin.logerror(plugin, `rspamd: bad result length ${r.length} string="${str}"`)
+    this.logerror(this, `rspamd: bad result length ${r.length} string="${str}"`)
     return
   }
   return { asn: r[0], net: r[1], country: r[2], assignor: r[3], date: r[4] }
 }
 
 exports.add_header_asn = function (next, connection) {
+  if (!this.cfg.header.asn) return next()
   const asn = connection.results.get('asn')
   if (!asn?.asn) return next()
   if (!connection.transaction) return next()
@@ -260,6 +268,7 @@ exports.add_header_asn = function (next, connection) {
 }
 
 exports.add_header_provider = function (next, connection) {
+  if (!this.cfg.header.provider) return next()
   const asn = connection.results.get('asn')
   if (!asn?.asn) return next()
 
@@ -320,6 +329,7 @@ exports.load_dbs = async function () {
 }
 
 exports.lookup_via_maxmind = function (next, connection) {
+  if (!this.cfg.protocols.geoip) return next()
   if (!this.maxmind || !this.dbsLoaded) return next()
 
   if (connection.results.get(this)?.asn) return next() // already set, skip
