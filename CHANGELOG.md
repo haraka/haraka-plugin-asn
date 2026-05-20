@@ -4,6 +4,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Unreleased
 
+### [2.2.0] - 2026-05-19
+
+- feat: add IPv6 support for DNS providers
+- feat: hot-reload providers after config change
+
 ### [2.1.0] - 2026-05-15
 
 - fix: trim string with trim() vs \s+
@@ -100,3 +105,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 [2.0.5]: https://github.com/haraka/haraka-plugin-asn/releases/tag/v2.0.5
 [2.0.6]: https://github.com/haraka/haraka-plugin-asn/releases/tag/v2.0.6
 [2.1.0]: https://github.com/haraka/haraka-plugin-asn/releases/tag/v2.1.0
+[2.2.0]: https://github.com/haraka/haraka-plugin-asn/releases/tag/v2.2.0
