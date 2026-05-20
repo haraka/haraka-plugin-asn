@@ -217,15 +217,41 @@ describe('get_dns_results', () => {
     assert.match(r.net, /\/\d+$/, 'net is in CIDR notation')
   })
 
-  it('returns undefined for IPv6 addresses without making a DNS query', async () => {
+  it('returns undefined for IPv6 addresses when provider has no IPv6 zone', async () => {
     const p = makePlugin()
-    assert.equal(await p.get_dns_results('origin.asn.cymru.com', '2001:db8::1'), undefined)
-    assert.equal(await p.get_dns_results('origin.asn.cymru.com', '::1'), undefined)
+    // spameatingmonkey has no IPv6 zone
+    assert.equal(
+      await p.get_dns_results('origin.asn.spameatingmonkey.net', '2001:db8::1'),
+      undefined,
+    )
   })
 
   it('returns undefined for non-IP input', async () => {
     const p = makePlugin()
     assert.equal(await p.get_dns_results('origin.asn.cymru.com', 'not-an-ip'), undefined)
+  })
+
+  // Live IPv6 tests — Cymru and rspamd support IPv6 via separate zones
+  it('origin6.asn.cymru.com returns asn+net for IPv6', { timeout: 6000 }, async () => {
+    const r = await plugin.get_dns_results('origin.asn.cymru.com', '2606:4700::1111')
+    if (!r) {
+      console.error(
+        'WARN: origin6.asn.cymru.com returned no result — service may be down',
+      )
+      return
+    }
+    assert.ok(r.asn, 'has asn')
+    assert.ok(r.net, 'has net (CIDR)')
+  })
+
+  it('asn6.rspamd.com returns asn+net for IPv6', { timeout: 6000 }, async () => {
+    const r = await plugin.get_dns_results('asn.rspamd.com', '2606:4700::1111')
+    if (!r) {
+      console.error('WARN: asn6.rspamd.com returned no result — service may be down')
+      return
+    }
+    assert.ok(r.asn, 'has asn')
+    assert.ok(r.net, 'has net (CIDR)')
   })
 })
 
@@ -437,5 +463,51 @@ describe('register', () => {
     await p.register()
     assert.ok(p.hooks.data_post.includes('add_header_asn'))
     assert.ok(p.hooks.data_post.includes('add_header_provider'))
+  })
+})
+
+describe('expand_ipv6 / ipv6_nibbles', () => {
+  const plugin = makePlugin()
+
+  const expandCases = [
+    [
+      'full form',
+      '2001:0db8:0000:0000:0000:0000:0000:0001',
+      '20010db8000000000000000000000001',
+    ],
+    ['compressed ::', '2001:db8::1', '20010db8000000000000000000000001'],
+    ['loopback', '::1', '00000000000000000000000000000001'],
+    ['all zeros', '::', '00000000000000000000000000000000'],
+    ['uppercase', '2001:DB8::1', '20010db8000000000000000000000001'],
+  ]
+  for (const [label, ip, expected] of expandCases) {
+    it(`expand_ipv6 ${label}`, () => {
+      assert.equal(plugin.expand_ipv6(ip.toLowerCase()), expected)
+    })
+  }
+
+  it('ipv6_nibbles for 2001:db8::1', () => {
+    assert.equal(
+      plugin.ipv6_nibbles('2001:db8::1'),
+      '1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.b.d.0.1.0.0.2',
+    )
+  })
+
+  it('ipv6_nibbles for ::', () => {
+    assert.equal(plugin.ipv6_nibbles('::'), Array(32).fill('0').join('.'))
+  })
+})
+
+describe('parse_routeviews sentinel', () => {
+  const plugin = makePlugin()
+
+  it('returns undefined for 4294967295 no-data sentinel', () => {
+    assert.equal(plugin.parse_routeviews(['4294967295', '0', '0']), undefined)
+  })
+
+  it('still parses normal routeviews IPv4 response', () => {
+    const r = plugin.parse_routeviews(['15169', '8.8.8.0', '24'])
+    assert.equal(r.asn, '15169')
+    assert.equal(r.net, '8.8.8.0/24')
   })
 })

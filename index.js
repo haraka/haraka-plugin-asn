@@ -9,6 +9,35 @@ let test_ip = '66.128.51.163'
 const providers = []
 let conf_providers = ['origin.asn.cymru.com', 'asn.routeviews.org', 'asn.rspamd.com']
 
+// IPv6 DNS zone for each provider (undefined = IPv4 only)
+const ipv6_zone_map = {
+  'origin.asn.cymru.com': 'origin6.asn.cymru.com',
+  'asn.rspamd.com': 'asn6.rspamd.com',
+  'asn.routeviews.org': 'origin6.asn.routeviews.org',
+}
+
+function expand_ipv6(ip) {
+  const parts = ip.split('::')
+  let groups
+  if (parts.length === 2) {
+    const left = parts[0] ? parts[0].split(':') : []
+    const right = parts[1] ? parts[1].split(':') : []
+    const missing = 8 - left.length - right.length
+    const zeros = Array(missing).fill('0000')
+    groups = [...left, ...zeros, ...right]
+  } else {
+    groups = ip.split(':')
+  }
+  return groups.map((g) => g.padStart(4, '0')).join('')
+}
+
+function ipv6_nibbles(ip) {
+  return expand_ipv6(ip.toLowerCase()).split('').reverse().join('.')
+}
+
+exports.expand_ipv6 = expand_ipv6
+exports.ipv6_nibbles = ipv6_nibbles
+
 exports.register = async function () {
   this.registered = false
 
@@ -77,11 +106,20 @@ exports.load_asn_ini = function () {
 }
 
 exports.get_dns_results = async function (zone, ip) {
-  if (net.isIP(ip) !== 4) {
-    this.logdebug(this, `skipping DNS ASN lookup for non-IPv4 address ${ip}`)
+  let query
+  if (net.isIP(ip) === 4) {
+    query = `${ip.split('.').reverse().join('.')}.${zone}`
+  } else if (net.isIP(ip) === 6) {
+    const v6zone = ipv6_zone_map[zone]
+    if (!v6zone) {
+      this.logdebug(this, `provider ${zone} does not support IPv6, skipping`)
+      return
+    }
+    query = `${ipv6_nibbles(ip)}.${v6zone}`
+  } else {
+    this.logdebug(this, `not an IP address: ${ip}`)
     return
   }
-  const query = `${ip.split('.').reverse().join('.')}.${zone}`
 
   const timeout = (prom, time, exception) => {
     let timer
@@ -204,6 +242,9 @@ exports.parse_routeviews = function (thing) {
     this.logerror(this, `result length not 3: ${labels.length} string="${thing}"`)
     return
   }
+
+  // 4294967295 is the RouteViews sentinel for "no ASN data"
+  if (labels[0] === '4294967295') return
 
   return { asn: labels[0], net: `${labels[1]}/${labels[2]}` }
 }

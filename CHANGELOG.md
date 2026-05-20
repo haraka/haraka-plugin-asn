@@ -6,11 +6,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### [2.2.0] - 2026-05-19
 
-#### Fixed
-
-- guard IPv6 in get_dns_results; refresh providers on hot-reload
-
-
 - feat: add IPv6 support for DNS providers
 - feat: hot-reload providers after config change
 

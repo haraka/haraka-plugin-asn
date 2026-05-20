@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "@haraka/eslint-config": "^2.0.4",
-    "haraka-test-fixtures": "^1.4.3"
+    "haraka-test-fixtures": "^1.6.0"
   },
   "prettier": {
     "printWidth": 90,
