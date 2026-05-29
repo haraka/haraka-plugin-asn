@@ -8,11 +8,13 @@
     "config"
   ],
   "scripts": {
+    "prepare": "git rev-parse --git-dir >/dev/null 2>&1 && git config core.hooksPath .githooks || true",
     "format": "npm run prettier:fix && npm run lint:fix",
     "lint": "npx eslint *.js test",
     "lint:fix": "npx eslint *.js test --fix",
     "prettier": "npx prettier . --check",
     "prettier:fix": "npx prettier . --write --log-level=warn",
+    "qlty": "qlty smells --all",
     "test": "node --test --test-force-exit",
     "test:coverage": "node --test --test-force-exit --experimental-test-coverage --test-coverage-exclude=package.json --test-coverage-exclude=test/*.js",
     "test:coverage:lcov": "mkdir -p coverage && node --test --test-force-exit --experimental-test-coverage --test-coverage-exclude=package.json --test-coverage-exclude=test/*.js --test-reporter=lcov --test-reporter-destination=coverage/lcov.info",
@@ -40,7 +42,7 @@
   },
   "devDependencies": {
     "@haraka/eslint-config": "^2.0.4",
-    "haraka-test-fixtures": "^1.6.0"
+    "haraka-test-fixtures": "^1.7.0"
   },
   "prettier": {
     "printWidth": 90,
