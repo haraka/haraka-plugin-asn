@@ -1,12 +1,12 @@
+'use strict'
+
 const assert = require('node:assert/strict')
 const { describe, it } = require('node:test')
-const path = require('node:path')
 
-const fixtures = require('haraka-test-fixtures')
+const { makePlugin } = require('haraka-test-fixtures')
 
 describe('parse_monkey', () => {
-  const plugin = new fixtures.plugin('asn')
-  plugin.config = plugin.config.module_config(path.resolve('test'))
+  const plugin = makePlugin('asn', { configDir: 'test' })
   plugin.load_asn_ini()
 
   const cases = [
